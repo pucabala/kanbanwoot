@@ -13,13 +13,17 @@ function KanbanBoard() {
   useEffect(() => {
     const fetchContacts = async () => {
       const contacts = await getContacts();
-      // Organiza os contatos por estágio
+      // Inicializa todas as colunas vazias
       const organized = stages.reduce((acc, stage) => {
-        acc[stage] = contacts.filter(
-          c => c.custom_attributes?.kanban === stage
-        );
+        acc[stage] = [];
         return acc;
       }, {});
+      // Distribui contatos, caindo no primeiro estágio se não houver
+      contacts.forEach(contact => {
+        const stage = contact.custom_attributes?.kanban || stages[0];
+        if (!organized[stage]) organized[stage] = [];
+        organized[stage].push(contact);
+      });
       setColumns(organized);
     };
     fetchContacts();
@@ -55,6 +59,11 @@ function KanbanBoard() {
       alert("Erro ao atualizar estágio no Chatwoot.");
     }
   };
+
+  // Exibe um loading enquanto os contatos não carregam
+  if (!Object.keys(columns).length) {
+    return <div className="p-4">Carregando contatos...</div>;
+  }
 
   return (
     // Contexto do drag and drop
