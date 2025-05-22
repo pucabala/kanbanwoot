@@ -24,3 +24,9 @@ export const updateKanbanStage = async (contactId, stage) => {
     }
   });
 };
+
+export const getKanbanStages = async () => {
+  const res = await api.get(`/api/v1/accounts/${process.env.REACT_APP_ACCOUNT_ID}/custom_attributes`);
+  const kanbanField = res.data.find(attr => attr.attribute_key === 'kanban');
+  return kanbanField?.attribute_values || [];
+};

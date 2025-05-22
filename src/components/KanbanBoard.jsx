@@ -1,75 +1,72 @@
 import React, { useEffect, useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { getContacts, updateKanbanStage } from '../api';
-
-// Define os estágios do Kanban
-const stages = ['Novo', 'Em Progresso', 'Concluído'];
+import { getContacts, updateKanbanStage, getKanbanStages } from '../api';
 
 function KanbanBoard() {
-  // Estado para armazenar os contatos organizados por estágio
   const [columns, setColumns] = useState({});
+  const [stages, setStages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Busca os contatos ao montar o componente
   useEffect(() => {
-    const fetchContacts = async () => {
-      const contacts = await getContacts();
+    const fetchData = async () => {
+      // Busca estágios e contatos em paralelo
+      const [kanbanStages, contacts] = await Promise.all([
+        getKanbanStages(),
+        getContacts()
+      ]);
+      setStages(kanbanStages);
+
       // Inicializa todas as colunas vazias
-      const organized = stages.reduce((acc, stage) => {
+      const organized = kanbanStages.reduce((acc, stage) => {
         acc[stage] = [];
         return acc;
       }, {});
+
       // Distribui contatos, caindo no primeiro estágio se não houver
       contacts.forEach(contact => {
-        const stage = contact.custom_attributes?.kanban || stages[0];
+        const stage = contact.custom_attributes?.kanban || kanbanStages[0];
         if (!organized[stage]) organized[stage] = [];
         organized[stage].push(contact);
       });
+
       setColumns(organized);
+      setLoading(false);
     };
-    fetchContacts();
+    fetchData();
   }, []);
 
-  // Função chamada ao finalizar o drag and drop
   const onDragEnd = async ({ source, destination }) => {
-    if (!destination) return; // Se não houver destino, não faz nada
+    if (!destination) return;
 
-    // Remove o item da lista de origem
     const sourceList = Array.from(columns[source.droppableId]);
     const [moved] = sourceList.splice(source.index, 1);
-    // Adiciona o item na lista de destino
     const destList = Array.from(columns[destination.droppableId] || []);
     destList.splice(destination.index, 0, moved);
 
-    // Atualiza o estado localmente (otimista)
     const updatedColumns = {
       ...columns,
       [source.droppableId]: sourceList,
       [destination.droppableId]: destList
     };
 
-    const prevColumns = columns; // Salva o estado anterior para rollback
-
+    const prevColumns = columns;
     setColumns(updatedColumns);
 
     try {
-      // Atualiza o estágio no backend (Chatwoot)
       await updateKanbanStage(moved.id, destination.droppableId);
     } catch (err) {
-      setColumns(prevColumns); // Rollback em caso de erro
+      setColumns(prevColumns);
       alert("Erro ao atualizar estágio no Chatwoot.");
     }
   };
 
-  // Exibe um loading enquanto os contatos não carregam
-  if (!Object.keys(columns).length) {
-    return <div className="p-4">Carregando contatos...</div>;
+  if (loading) {
+    return <div className="p-4">Carregando Kanban...</div>;
   }
 
   return (
-    // Contexto do drag and drop
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex gap-4 p-4 overflow-x-auto">
-        {/* Renderiza cada coluna do Kanban */}
+      <div className="flex gap-6 p-6 overflow-x-auto bg-gray-50 min-h-screen">
         {stages.map(stage => (
           <Droppable key={stage} droppableId={stage}>
             {(provided) => (
@@ -79,7 +76,6 @@ function KanbanBoard() {
                 {...provided.droppableProps}
               >
                 <h2 className="text-lg font-bold mb-2">{stage}</h2>
-                {/* Renderiza os contatos dentro da coluna */}
                 {columns[stage]?.map((contact, index) => (
                   <Draggable key={contact.id} draggableId={String(contact.id)} index={index}>
                     {(provided) => (
@@ -89,13 +85,11 @@ function KanbanBoard() {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                       >
-                        {/* Exibe nome, email ou id do contato */}
                         {contact.name || contact.email || `Contato #${contact.id}`}
                       </div>
                     )}
                   </Draggable>
                 ))}
-                {/* Placeholder necessário para o drag and drop */}
                 {provided.placeholder}
               </div>
             )}
