@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getContacts, updateKanbanStage, getKanbanStages } from '../api';
+import { debugLog } from '../debug';
 
 function KanbanBoard() {
   const [columns, setColumns] = useState({});
@@ -8,13 +9,17 @@ function KanbanBoard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    debugLog('KanbanBoard montado');
     const fetchData = async () => {
+      debugLog('Buscando estágios e contatos...');
       // Busca estágios e contatos em paralelo
       const [kanbanStages, contacts] = await Promise.all([
         getKanbanStages(),
         getContacts()
       ]);
       setStages(kanbanStages);
+
+      debugLog('Estágios:', kanbanStages, 'Contatos:', contacts);
 
       // Inicializa todas as colunas vazias
       const organized = kanbanStages.reduce((acc, stage) => {
@@ -36,6 +41,7 @@ function KanbanBoard() {
   }, []);
 
   const onDragEnd = async ({ source, destination }) => {
+    debugLog('DragEnd', { source, destination });
     if (!destination) return;
 
     const sourceList = Array.from(columns[source.droppableId]);
