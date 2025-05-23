@@ -18,7 +18,7 @@ async function chatwootFetch(endpoint, options = {}) {
     const response = await fetch(url, { ...options, headers: chatwootHeaders });
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Erro na API: ${response.status} - ${errorText}`);
+      throw new Error(`Erro na API:${url} ${response.status} - ${errorText}`);
     }
     return await response.json();
   } catch (error) {
