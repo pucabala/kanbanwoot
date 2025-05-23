@@ -3,15 +3,13 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getContacts, updateKanbanStage, getKanbanStages } from '../api';
 import { debugLog } from '../debug';
 
-debugLog('KanbanBoard.jsx: componente carregado');
-
 function KanbanBoard() {
   const [columns, setColumns] = useState({});
   const [stages, setStages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    debugLog('KanbanBoard.jsx: useEffect montado');
+    debugLog('KanbanBoard montado');
     const fetchData = async () => {
       try {
         debugLog('Buscando estágios e contatos...');
@@ -49,7 +47,7 @@ function KanbanBoard() {
   }, []);
 
   const onDragEnd = async ({ source, destination }) => {
-    debugLog('KanbanBoard.jsx: onDragEnd chamado', { source, destination });
+    debugLog('DragEnd', { source, destination });
     if (!destination) return;
 
     const sourceList = Array.from(columns[source.droppableId]);
