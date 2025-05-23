@@ -1,3 +1,4 @@
+//App.jsx
 import React from 'react';
 import KanbanBoard from './components/KanbanBoard';
 import TesteContacts from './components/TesteContacts';
@@ -7,6 +8,7 @@ import { debugLog } from './debug';
 function App() {
   debugLog('App.jsx: App renderizado');
   // Captura as variáveis de ambiente
+  
   const envVars = {
     REACT_APP_CHATWOOT_URL: window._env_.REACT_APP_CHATWOOT_URL,
     REACT_APP_ACCOUNT_ID: window._env_.REACT_APP_CHATWOOT_ACCOUNT_ID,

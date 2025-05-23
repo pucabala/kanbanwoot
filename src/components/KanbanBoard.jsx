@@ -1,53 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { getContacts, updateKanbanStage, getKanbanStages } from '../api';
-import { debugLog } from '../debug';
+import React, { useEffect, useReducer, useState } from 'react';
+import { DragDropContext } from '@hello-pangea/dnd';
+import { updateKanbanStage } from '../api';
+import { kanbanReducer } from '../reducers/kanbanReducer';
+import Notification from './Notification';
+import ErrorMessage from './ErrorMessage';  // Importa o novo componente
+import { useKanbanData } from '../hooks/useKanbanData';
+import KanbanColumn from './KanbanColumn';
 
 function KanbanBoard() {
-  const [columns, setColumns] = useState({});
-  const [stages, setStages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { contacts, stages, loading, error } = useKanbanData();
+  const [columns, dispatch] = useReducer(kanbanReducer, {});
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
-    debugLog('KanbanBoard montado');
-    const fetchData = async () => {
-      try {
-        debugLog('Buscando estágios e contatos...');
-        const [kanbanStages, contacts] = await Promise.all([
-          getKanbanStages(),
-          getContacts()
-        ]);
-        setStages(kanbanStages);
+    if (!loading && contacts.length && stages.length) {
+      const organized = stages.reduce((acc, stage) => {
+        acc[stage] = [];
+        return acc;
+      }, {});
 
-        debugLog('Estágios:', kanbanStages, 'Contatos:', contacts);
+      contacts.forEach(contact => {
+        const stage = contact.custom_attributes?.kanban || stages[0];
+        if (!organized[stage]) organized[stage] = [];
+        organized[stage].push(contact);
+      });
 
-        const organized = kanbanStages.reduce((acc, stage) => {
-          acc[stage] = [];
-          return acc;
-        }, {});
-
-        contacts.forEach(contact => {
-          const stage = contact.custom_attributes?.kanban || kanbanStages[0];
-          if (!organized[stage]) organized[stage] = [];
-          organized[stage].push(contact);
-        });
-
-        setColumns(organized);
-        setLoading(false);
-      } catch (err) {
-        debugLog('Erro ao buscar dados do Kanban:', err);
-        // Mostra erro na tela
-        setLoading(false);
-        setStages([]);
-        setColumns({});
-        alert('Erro ao carregar dados do Kanban. Veja o console para detalhes.');
-      }
-    };
-    fetchData();
-  }, []);
+      dispatch({ type: 'INIT', payload: organized });
+    }
+  }, [contacts, stages, loading]);
 
   const onDragEnd = async ({ source, destination }) => {
-    debugLog('DragEnd', { source, destination });
     if (!destination) return;
 
     const sourceList = Array.from(columns[source.droppableId]);
@@ -55,60 +37,43 @@ function KanbanBoard() {
     const destList = Array.from(columns[destination.droppableId] || []);
     destList.splice(destination.index, 0, moved);
 
-    const updatedColumns = {
-      ...columns,
-      [source.droppableId]: sourceList,
-      [destination.droppableId]: destList
-    };
+    const prevColumns = JSON.parse(JSON.stringify(columns));
 
-    const prevColumns = columns;
-    setColumns(updatedColumns);
+    dispatch({
+      type: 'MOVE_CARD',
+      payload: {
+        source: source.droppableId,
+        destination: destination.droppableId,
+        contact: moved
+      }
+    });
 
     try {
       await updateKanbanStage(moved.id, destination.droppableId);
     } catch (err) {
-      setColumns(prevColumns);
-      alert("Erro ao atualizar estágio no Chatwoot.");
+      setNotification({ type: 'error', message: 'Erro ao atualizar estágio no Chatwoot.' });
+      dispatch({ type: 'INIT', payload: prevColumns });
     }
   };
 
-  if (loading) {
-    return <div className="p-4">Carregando Kanban...</div>;
-  }
+  if (loading) return <div className="p-4">Carregando Kanban...</div>;
+  if (error) return <ErrorMessage message={`Erro ao carregar dados: ${error.message}`} />;  // Usando ErrorMessage
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex gap-6 p-6 overflow-x-auto bg-gray-50 min-h-screen">
-        {stages.map(stage => (
-          <Droppable key={stage} droppableId={stage}>
-            {(provided) => (
-              <div
-                className="bg-gray-100 p-4 rounded w-80 min-h-[300px]"
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-              >
-                <h2 className="text-lg font-bold mb-2">{stage}</h2>
-                {columns[stage]?.map((contact, index) => (
-                  <Draggable key={contact.id} draggableId={String(contact.id)} index={index}>
-                    {(provided) => (
-                      <div
-                        className="bg-white p-3 mb-2 rounded shadow"
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                      >
-                        {contact.name || contact.email || `Contato #${contact.id}`}
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        ))}
-      </div>
-    </DragDropContext>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {notification && <Notification type={notification.type} message={notification.message} />}
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="flex gap-6 overflow-x-auto">
+          {stages.map(stage => (
+            <KanbanColumn
+              key={stage}
+              stage={stage}
+              contacts={columns[stage] || []}
+            />
+          ))}
+        </div>
+      </DragDropContext>
+    </div>
   );
 }
 
