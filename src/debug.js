@@ -1,4 +1,4 @@
-const isDebug = process.env.REACT_APP_DEBUG === 'true';
+const isDebug = window._env_ && window._env_.REACT_APP_DEBUG === 'true';
 
 export function debugLog(...args) {
   const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');

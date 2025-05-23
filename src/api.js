@@ -1,9 +1,9 @@
 import { debugLog } from './debug';
 
 // Configurações da API do Chatwoot vindas do .env (injetadas no build)
-const CHATWOOT_URL = process.env.REACT_APP_CHATWOOT_URL;
-const ACCOUNT_ID = process.env.REACT_APP_ACCOUNT_ID;
-const TOKEN = process.env.REACT_APP_CHATWOOT_TOKEN;
+const CHATWOOT_URL = window._env_.REACT_APP_CHATWOOT_URL;
+const ACCOUNT_ID = window._env_.REACT_APP_CHATWOOT_ACCOUNT_ID;
+const TOKEN = window._env_.REACT_APP_CHATWOOT_TOKEN;
 
 
 const chatwootHeaders = {
