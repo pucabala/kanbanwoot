@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { debugLog } from './debug';
 
+debugLog('api.js: módulo carregado');
+
 export async function getContacts() {
   debugLog('api.js: getContacts chamado');
   const res = await axios.get('/api/contacts');

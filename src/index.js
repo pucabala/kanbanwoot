@@ -4,12 +4,13 @@ import App from './App';
 import './index.css';
 import { debugLog } from './debug';
 
-debugLog('index.js iniciado');
+
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
-debugLog('React root criado');
+debugLog('index.js: ReactDOM root criado');
 root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
 );
-debugLog('App renderizado no root');
+debugLog('index.js: App renderizado');

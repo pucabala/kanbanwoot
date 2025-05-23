@@ -1,9 +1,9 @@
 import React from 'react';
-import { debugLog } from './debug';
 import KanbanBoard from './components/KanbanBoard';
+import { debugLog } from './debug';
 
 function App() {
-  debugLog('App.jsx montado');
+  debugLog('App.jsx: App renderizado');
   return (
     <div>
       <header>

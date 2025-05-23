@@ -3,15 +3,15 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getContacts, updateKanbanStage, getKanbanStages } from '../api';
 import { debugLog } from '../debug';
 
+debugLog('KanbanBoard.jsx: componente carregado');
+
 function KanbanBoard() {
-  debugLog('KanbanBoard.jsx montado');
   const [columns, setColumns] = useState({});
   const [stages, setStages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    debugLog('KanbanBoard useEffect chamado');
+    debugLog('KanbanBoard.jsx: useEffect montado');
     const fetchData = async () => {
       try {
         debugLog('Buscando estágios e contatos...');
@@ -19,9 +19,9 @@ function KanbanBoard() {
           getKanbanStages(),
           getContacts()
         ]);
-        debugLog('Estágios recebidos:', kanbanStages);
-        debugLog('Contatos recebidos:', contacts);
         setStages(kanbanStages);
+
+        debugLog('Estágios:', kanbanStages, 'Contatos:', contacts);
 
         const organized = kanbanStages.reduce((acc, stage) => {
           acc[stage] = [];
@@ -35,18 +35,21 @@ function KanbanBoard() {
         });
 
         setColumns(organized);
-      } catch (err) {
-        debugLog('Erro ao buscar dados do KanbanBoard:', err);
-        setError(err);
-      } finally {
         setLoading(false);
+      } catch (err) {
+        debugLog('Erro ao buscar dados do Kanban:', err);
+        // Mostra erro na tela
+        setLoading(false);
+        setStages([]);
+        setColumns({});
+        alert('Erro ao carregar dados do Kanban. Veja o console para detalhes.');
       }
     };
     fetchData();
   }, []);
 
   const onDragEnd = async ({ source, destination }) => {
-    debugLog('DragEnd', { source, destination });
+    debugLog('KanbanBoard.jsx: onDragEnd chamado', { source, destination });
     if (!destination) return;
 
     const sourceList = Array.from(columns[source.droppableId]);
