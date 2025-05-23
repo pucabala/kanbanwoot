@@ -10,6 +10,7 @@ cat <<EOF > "$ENV_FILE"
 CHATWOOT_URL=${CHATWOOT_URL}
 CHATWOOT_TOKEN=${CHATWOOT_TOKEN}
 CHATWOOT_ACCOUNT_ID=${CHATWOOT_ACCOUNT_ID}
+REACT_APP_DEBUG=${REACT_APP_DEBUG}
 EOF
 
 echo "Arquivo .env gerado com sucesso com os seguintes valores:"
