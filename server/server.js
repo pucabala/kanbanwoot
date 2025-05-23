@@ -18,14 +18,9 @@ app.use('/api', apiRouter);
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../build', 'index.html'));
 });
-
+  
 app.use((req, res, next) => {
   console.log(`[DEBUG] ${req.method} ${req.url}`);
   next();
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Backend rodando na porta ${PORT}`);
-  console.log('[DEBUG] Servidor iniciado');
-});
