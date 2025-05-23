@@ -8,12 +8,10 @@ function App() {
   debugLog('App.jsx: App renderizado');
   // Captura as variáveis de ambiente
   const envVars = {
-    REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+    REACT_APP_CHATWOOT_URL: process.env.REACT_APP_CHATWOOT_URL,
     REACT_APP_ACCOUNT_ID: process.env.REACT_APP_ACCOUNT_ID,
     REACT_APP_CHATWOOT_TOKEN: process.env.REACT_APP_CHATWOOT_TOKEN,
-    CHATWOOT_URL: process.env.CHATWOOT_URL,
-    CHATWOOT_ACCOUNT_ID: process.env.CHATWOOT_ACCOUNT_ID,
-    CHATWOOT_TOKEN: process.env.CHATWOOT_TOKEN,
+    REACT_APP_DEBUG: process.env.REACT_APP_DEBUG,
   };
   return (
     <Router>
