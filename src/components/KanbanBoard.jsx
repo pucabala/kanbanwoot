@@ -40,7 +40,7 @@ function KanbanBoard() {
         setLoading(false);
         setStages([]);
         setColumns({});
-        alert('Erro ao carregar dados do Kanban. Veja o console para detalhes.');
+        //alert('Erro ao carregar dados do Kanban. Veja o console para detalhes.');
       }
     };
     fetchData();
