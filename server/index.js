@@ -1,12 +1,22 @@
 import express from 'express';
 import apiRouter from './chatwootApi.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
+app.use(express.json());
 
-// ...existing middleware and routes...
+// Serve arquivos estáticos do React build
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, '../build')));
 
+// Rotas da API
 app.use('/api', apiRouter);
 
-// ...existing error handling and server start...
+// Fallback para SPA React
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../build', 'index.html'));
+});
 
 export default app;
