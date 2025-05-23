@@ -6,6 +6,15 @@ import { debugLog } from './debug';
 
 function App() {
   debugLog('App.jsx: App renderizado');
+  // Captura as variáveis de ambiente
+  const envVars = {
+    REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+    REACT_APP_ACCOUNT_ID: process.env.REACT_APP_ACCOUNT_ID,
+    REACT_APP_CHATWOOT_TOKEN: process.env.REACT_APP_CHATWOOT_TOKEN,
+    CHATWOOT_URL: process.env.CHATWOOT_URL,
+    CHATWOOT_ACCOUNT_ID: process.env.CHATWOOT_ACCOUNT_ID,
+    CHATWOOT_TOKEN: process.env.CHATWOOT_TOKEN,
+  };
   return (
     <Router>
       <div>
@@ -13,6 +22,9 @@ function App() {
           <h1 className="text-center text-2xl font-bold mt-4">Kanban - Chatwoot</h1>
         </header>
         <main>
+          <pre style={{background:'#eee',padding:'1em',margin:'1em 0'}}>
+            {JSON.stringify(envVars, null, 2)}
+          </pre>
           <Routes>
             <Route path="/" element={<KanbanBoard />} />
             <Route path="/teste" element={<TesteContacts />} />
