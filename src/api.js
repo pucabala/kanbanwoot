@@ -12,15 +12,34 @@ const chatwootHeaders = {
 };
 
 async function chatwootFetch(endpoint, options = {}) {
-  const url = `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}${endpoint}`;
+  const url = `${CHATWOOT_URL}/api/v1/${ACCOUNT_ID}${endpoint}`;
   debugLog('chatwootFetch', url, options);
   try {
     const response = await fetch(url, { ...options, headers: chatwootHeaders });
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Erro na API:${url} ${response.status} - ${errorText}`);
+    const responseText = await response.text();
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = responseText;
     }
-    return await response.json();
+    if (!response.ok) {
+      const errorDetails = {
+        message: `Erro na API: ${url} ${response.status}`,
+        status: response.status,
+        url,
+        method: options.method || 'GET',
+        requestBody: options.body,
+        headers: chatwootHeaders,
+        response: responseData,
+        stack: (new Error()).stack
+      };
+      debugLog('Detalhes do erro Chatwoot:', errorDetails);
+      const error = new Error(errorDetails.message);
+      Object.assign(error, errorDetails);
+      throw error;
+    }
+    return responseData;
   } catch (error) {
     debugLog('Erro na requisição Chatwoot:', error);
     throw error;
