@@ -1,5 +1,22 @@
 import axios from 'axios';
 
+// Adiciona interceptors para debug
+axios.interceptors.request.use(request => {
+  console.debug('Axios Request:', request);
+  return request;
+}, error => {
+  console.error('Axios Request Error:', error);
+  return Promise.reject(error);
+});
+
+axios.interceptors.response.use(response => {
+  console.debug('Axios Response:', response);
+  return response;
+}, error => {
+  console.error('Axios Response Error:', error);
+  return Promise.reject(error);
+});
+
 if (!process.env.REACT_APP_API_URL || !process.env.REACT_APP_CHATWOOT_TOKEN || !process.env.REACT_APP_ACCOUNT_ID) {
   throw new Error('Variáveis de ambiente da API não configuradas corretamente.');
 }
