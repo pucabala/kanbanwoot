@@ -2,6 +2,11 @@
 import axios from 'axios';
 import { debugLog } from './debug';
 
+// Configura a baseURL do axios a partir do window._env_ se disponível
+if (window._env_ && window._env_.REACT_APP_API_BASE_URL) {
+  axios.defaults.baseURL = window._env_.REACT_APP_API_BASE_URL;
+}
+
 debugLog('api.js: módulo carregado');
 
 export async function getContacts() {
