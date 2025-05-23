@@ -1,6 +1,3 @@
-from pathlib import Path
-
-readme_content = """
 # 🧩 Kanbanwoot
 
 Interface web estilo Kanban integrada ao **Chatwoot**, utilizando o campo personalizado `kanban` (tipo lista) para visualizar e mover contatos entre etapas diretamente na interface.
@@ -80,4 +77,3 @@ Configure no Easypanel para expor a porta 3000.
 - Filtragem por tags, agentes ou inbox
 - Integração com histórico de conversas
 - Login com autenticação de operadores Chatwoot
-````
