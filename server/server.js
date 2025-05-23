@@ -1,5 +1,5 @@
 import express from 'express';
-import apiRouter from './api.js';
+import apiRouter from './chatwootApi.js';
 
 const app = express();
 app.use(express.json());
