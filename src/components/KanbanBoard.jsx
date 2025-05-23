@@ -11,31 +11,37 @@ function KanbanBoard() {
   useEffect(() => {
     debugLog('KanbanBoard montado');
     const fetchData = async () => {
-      debugLog('Buscando estágios e contatos...');
-      // Busca estágios e contatos em paralelo
-      const [kanbanStages, contacts] = await Promise.all([
-        getKanbanStages(),
-        getContacts()
-      ]);
-      setStages(kanbanStages);
+      try {
+        debugLog('Buscando estágios e contatos...');
+        const [kanbanStages, contacts] = await Promise.all([
+          getKanbanStages(),
+          getContacts()
+        ]);
+        setStages(kanbanStages);
 
-      debugLog('Estágios:', kanbanStages, 'Contatos:', contacts);
+        debugLog('Estágios:', kanbanStages, 'Contatos:', contacts);
 
-      // Inicializa todas as colunas vazias
-      const organized = kanbanStages.reduce((acc, stage) => {
-        acc[stage] = [];
-        return acc;
-      }, {});
+        const organized = kanbanStages.reduce((acc, stage) => {
+          acc[stage] = [];
+          return acc;
+        }, {});
 
-      // Distribui contatos, caindo no primeiro estágio se não houver
-      contacts.forEach(contact => {
-        const stage = contact.custom_attributes?.kanban || kanbanStages[0];
-        if (!organized[stage]) organized[stage] = [];
-        organized[stage].push(contact);
-      });
+        contacts.forEach(contact => {
+          const stage = contact.custom_attributes?.kanban || kanbanStages[0];
+          if (!organized[stage]) organized[stage] = [];
+          organized[stage].push(contact);
+        });
 
-      setColumns(organized);
-      setLoading(false);
+        setColumns(organized);
+        setLoading(false);
+      } catch (err) {
+        debugLog('Erro ao buscar dados do Kanban:', err);
+        // Mostra erro na tela
+        setLoading(false);
+        setStages([]);
+        setColumns({});
+        alert('Erro ao carregar dados do Kanban. Veja o console para detalhes.');
+      }
     };
     fetchData();
   }, []);
