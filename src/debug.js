@@ -9,5 +9,16 @@ export function debugLog(...args) {
     if (typeof process !== 'undefined' && process.stdout && process.stdout.write) {
       process.stdout.write('[DEBUG] ' + args.map(String).join(' ') + '\n');
     }
+
+    // Adiciona no HTML (se existir o elemento)
+    if (typeof window !== 'undefined') {
+      const el = document.getElementById('debug-log');
+      if (el) {
+        const msg = '[DEBUG] ' + args.map(String).join(' ');
+        const line = document.createElement('div');
+        line.textContent = msg;
+        el.appendChild(line);
+      }
+    }
   }
 }
