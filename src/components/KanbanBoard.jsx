@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getContacts, updateKanbanStage, getKanbanStages } from '../api';
 
 function KanbanBoard() {
