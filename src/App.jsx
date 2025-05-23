@@ -27,7 +27,6 @@ function App() {
           </pre>
           <Routes>
             <Route path="/" element={<KanbanBoard />} />
-            <Route path="/teste" element={<TesteContacts />} />
           </Routes>
         </main>
       </div>
