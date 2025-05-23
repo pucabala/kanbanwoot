@@ -45,6 +45,18 @@ router.get('/contacts', async (req, res) => {
   }
 });
 
+// Rota de teste simples para listar contatos
+router.get('/test-contacts', async (req, res) => {
+  try {
+    const url = `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/contacts`;
+    const response = await fetch(url, { headers: chatwootHeaders });
+    const data = await response.json();
+    res.json({ ok: true, contacts: data });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: 'Erro ao buscar contatos.', error: err.message });
+  }
+});
+
 router.put('/contacts/:id', async (req, res) => {
   try {
     const url = `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/contacts/${req.params.id}`;
