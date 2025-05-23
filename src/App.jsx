@@ -23,7 +23,7 @@ function App() {
         </header>
         <main>
           <pre style={{background:'#eee',padding:'1em',margin:'1em 0'}}>
-            {JSON.stringify(envVars, null, 2)}
+          oi {JSON.stringify(envVars, null, 2)}ola
           </pre>
           <Routes>
             <Route path="/" element={<KanbanBoard />} />
