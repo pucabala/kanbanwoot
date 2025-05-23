@@ -5,7 +5,7 @@ import { debugLog } from './debug';
  * @returns {{ API_URL: string, TOKEN: string, ACCOUNT_ID: string }}
  */
 function getEnv() {
-  const { REACT_APP_API_URL, REACT_APP_CHATWOOT_TOKEN, REACT_APP_ACCOUNT_ID } = process.env;
+  const { REACT_APP_API_URL, REACT_APP_CHATWOOT_TOKEN, REACT_APP_ACCOUNT_ID } = window._env_ || {};
   if (!REACT_APP_API_URL || !REACT_APP_CHATWOOT_TOKEN || !REACT_APP_ACCOUNT_ID) {
     throw new Error('Variáveis de ambiente da API não configuradas corretamente.');
   }
@@ -15,7 +15,6 @@ function getEnv() {
     ACCOUNT_ID: REACT_APP_ACCOUNT_ID
   };
 }
-
 const HTTP_METHODS = {
   GET: 'GET',
   POST: 'POST',
