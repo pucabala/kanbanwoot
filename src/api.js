@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { debugLog } from './debug';
 
 // Checagem das variáveis de ambiente
@@ -10,28 +9,47 @@ if (
   throw new Error('Variáveis de ambiente da API não configuradas corretamente.');
 }
 
-// Instância do axios configurada para a API
-const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    'api_access_token': process.env.REACT_APP_CHATWOOT_TOKEN
-  }
-});
-
-// Função centralizada de request
+// Função centralizada de request usando fetch
 async function request({ method, url, data, params }) {
+  const baseUrl = process.env.REACT_APP_API_URL;
+  let fullUrl = `${baseUrl}${url}`;
+
+  // Adiciona query params se existirem
+  if (params) {
+    const query = new URLSearchParams(params).toString();
+    fullUrl += `?${query}`;
+  }
+
+  const options = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'api_access_token': process.env.REACT_APP_CHATWOOT_TOKEN
+    }
+  };
+
+  if (data) {
+    options.body = JSON.stringify(data);
+  }
+
   try {
-    debugLog('API Request:', { method, url, data, params });
-    const response = await api.request({ method, url, data, params });
+    debugLog('API Request:', { method, fullUrl, data, params });
+    const response = await fetch(fullUrl, options);
+    const responseData = await response.json();
+
     debugLog('API Response:', {
-      url: response.config.url,
+      url: fullUrl,
       status: response.status,
-      data: response.data
+      data: responseData
     });
-    return response.data;
+
+    if (!response.ok) {
+      throw new Error(responseData?.message || 'Erro na requisição');
+    }
+
+    return responseData;
   } catch (error) {
-    debugLog('API Error:', error?.response?.data || error.message);
+    debugLog('API Error:', error.message);
     throw error;
   }
 }
@@ -42,7 +60,7 @@ async function request({ method, url, data, params }) {
  */
 export const getContactCustomAttributes = () =>
   request({
-    method: 'get',
+    method: 'GET',
     url: `/api/v1/accounts/${process.env.REACT_APP_ACCOUNT_ID}/custom_attribute_definitions`,
     params: { attribute_model: 'contact_attribute' }
   });
@@ -53,7 +71,7 @@ export const getContactCustomAttributes = () =>
  */
 export const getKanbanAttributeDetails = (kanbanAttributeId) =>
   request({
-    method: 'get',
+    method: 'GET',
     url: `/api/v1/accounts/${process.env.REACT_APP_ACCOUNT_ID}/custom_attribute_definitions/${kanbanAttributeId}`
   });
 
@@ -63,7 +81,7 @@ export const getKanbanAttributeDetails = (kanbanAttributeId) =>
  */
 export const getContacts = () =>
   request({
-    method: 'get',
+    method: 'GET',
     url: `/api/v1/accounts/${process.env.REACT_APP_ACCOUNT_ID}/contacts`
   }).then(data => data.payload);
 
@@ -73,7 +91,7 @@ export const getContacts = () =>
  */
 export const updateKanbanStage = (contactId, stage) =>
   request({
-    method: 'put',
+    method: 'PUT',
     url: `/api/v1/accounts/${process.env.REACT_APP_ACCOUNT_ID}/contacts/${contactId}`,
     data: {
       custom_attributes: {
