@@ -33,7 +33,7 @@ async function request({ method, url, data, params }) {
   }
 
   try {
-    debugLog('API Request:', { method, fullUrl, data, params });
+    debugLog('API Request:', JSON.stringify({ method, fullUrl, data, params }, null, 2));
     console.log('Chamando URL:', fullUrl); // <-- Adicionado log da URL
     const response = await fetch(fullUrl, options);
     const responseData = await response.json();
