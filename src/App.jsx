@@ -1,7 +1,6 @@
 //App.jsx
 import React from 'react';
 import KanbanBoard from './components/KanbanBoard';
-import TesteContacts from './components/TesteContacts';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { debugLog } from './debug';
 
