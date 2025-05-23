@@ -19,7 +19,10 @@ router.get('/custom-attributes', async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch (err) {
-    res.status(500).json({ message: 'Erro ao buscar custom attributes.' });
+    res.status(500).json({ 
+      message: 'Erro ao buscar custom attributes.',
+      error: err.message 
+    });
   }
 });
 
@@ -30,7 +33,10 @@ router.get('/custom-attributes/:id', async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch (err) {
-    res.status(500).json({ message: 'Erro ao buscar atributo.' });
+    res.status(500).json({ 
+      message: 'Erro ao buscar atributo.',
+      error: err.message 
+    });
   }
 });
 
@@ -39,21 +45,13 @@ router.get('/contacts', async (req, res) => {
     const url = `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/contacts`;
     const response = await fetch(url, { headers: chatwootHeaders });
     const data = await response.json();
-    res.json(data);
+    // Supondo que os contatos estejam em data.payload
+    res.json(data.payload || []);
   } catch (err) {
-    res.status(500).json({ message: 'Erro ao buscar contatos.' });
-  }
-});
-
-// Rota de teste simples para listar contatos
-router.get('/test-contacts', async (req, res) => {
-  try {
-    const url = `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/contacts`;
-    const response = await fetch(url, { headers: chatwootHeaders });
-    const data = await response.json();
-    res.json({ ok: true, contacts: data });
-  } catch (err) {
-    res.status(500).json({ ok: false, message: 'Erro ao buscar contatos.', error: err.message });
+    res.status(500).json({ 
+      message: 'Erro ao buscar contatos.',
+      error: err.message 
+    });
   }
 });
 
@@ -68,7 +66,10 @@ router.put('/contacts/:id', async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch (err) {
-    res.status(500).json({ message: 'Erro ao atualizar contato.' });
+    res.status(500).json({ 
+      message: 'Erro ao atualizar contato.',
+      error: err.message 
+    });
   }
 });
 
