@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Define o caminho do arquivo .env.js na raiz do projeto servido
-ENV_FILE="/usr/share/nginx/html/.env.js_"
+ENV_FILE="/usr/share/nginx/html/env.js_"
 
 echo "Gerando arquivo de variáveis de ambiente: $ENV_FILE"
 
