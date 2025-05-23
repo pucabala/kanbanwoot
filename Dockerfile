@@ -1,10 +1,12 @@
 # Dockerfile
-FROM node:18 as build
+FROM node:18-alpine
+
 WORKDIR /app
 COPY . .
-RUN npm install && npm run build
 
-FROM nginx:alpine
-COPY --from=build /app/build /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+RUN npm install
+RUN npm run build
+
+RUN npm install -g serve
+EXPOSE 3000
+CMD ["serve", "-s", "build", "-l", "3000"]
