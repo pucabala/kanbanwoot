@@ -1,24 +1,13 @@
 const isDebug = process.env.REACT_APP_DEBUG === 'true';
 
 export function debugLog(...args) {
-  if (isDebug) {
-    // eslint-disable-next-line no-console
-    console.log('[DEBUG]', ...args);
-
-    // Também escreve no /dev/stdout se estiver em ambiente Node.js
-    if (typeof process !== 'undefined' && process.stdout && process.stdout.write) {
-      process.stdout.write('[DEBUG] ' + args.map(String).join(' ') + '\n');
-    }
-
-    // Adiciona no HTML (se existir o elemento)
-    if (typeof window !== 'undefined') {
-      const el = document.getElementById('debug-log');
-      if (el) {
-        const msg = '[DEBUG] ' + args.map(String).join(' ');
-        const line = document.createElement('div');
-        line.textContent = msg;
-        el.appendChild(line);
-      }
-    }
+  const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+  console.log('[DEBUG]', ...args);
+  const logDiv = document.getElementById('debug-log');
+  if (logDiv) {
+    const p = document.createElement('div');
+    p.textContent = msg;
+    logDiv.appendChild(p);
+    logDiv.scrollTop = logDiv.scrollHeight;
   }
 }

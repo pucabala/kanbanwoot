@@ -4,12 +4,14 @@ import { getContacts, updateKanbanStage, getKanbanStages } from '../api';
 import { debugLog } from '../debug';
 
 function KanbanBoard() {
+  debugLog('KanbanBoard.jsx montado');
   const [columns, setColumns] = useState({});
   const [stages, setStages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    debugLog('KanbanBoard montado');
+    debugLog('KanbanBoard useEffect chamado');
     const fetchData = async () => {
       try {
         debugLog('Buscando estágios e contatos...');
@@ -17,9 +19,9 @@ function KanbanBoard() {
           getKanbanStages(),
           getContacts()
         ]);
+        debugLog('Estágios recebidos:', kanbanStages);
+        debugLog('Contatos recebidos:', contacts);
         setStages(kanbanStages);
-
-        debugLog('Estágios:', kanbanStages, 'Contatos:', contacts);
 
         const organized = kanbanStages.reduce((acc, stage) => {
           acc[stage] = [];
@@ -33,14 +35,11 @@ function KanbanBoard() {
         });
 
         setColumns(organized);
-        setLoading(false);
       } catch (err) {
-        debugLog('Erro ao buscar dados do Kanban:', err);
-        // Mostra erro na tela
+        debugLog('Erro ao buscar dados do KanbanBoard:', err);
+        setError(err);
+      } finally {
         setLoading(false);
-        setStages([]);
-        setColumns({});
-        //alert('Erro ao carregar dados do Kanban. Veja o console para detalhes.');
       }
     };
     fetchData();

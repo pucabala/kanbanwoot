@@ -1,7 +1,9 @@
 import React from 'react';
+import { debugLog } from './debug';
 import KanbanBoard from './components/KanbanBoard';
 
 function App() {
+  debugLog('App.jsx montado');
   return (
     <div>
       <header>
