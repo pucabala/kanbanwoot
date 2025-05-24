@@ -14,12 +14,19 @@ function KanbanBoard() {
 
   useEffect(() => {
     if (!loading && contacts.length && stages.length) {
+      // Filtra contatos que tenham algum atributo cujo id comece com "kbw_" e valor diferente de null
+      const filteredContacts = contacts.filter(contact => {
+        if (!contact.custom_attributes) return false;
+        return Object.entries(contact.custom_attributes).some(
+          ([key, value]) => key.startsWith('kbw_') && value !== null
+        );
+      });
       const organized = stages.reduce((acc, stage) => {
         acc[stage] = [];
         return acc;
       }, {});
 
-      contacts.forEach(contact => {
+      filteredContacts.forEach(contact => {
         const stage = contact.custom_attributes?.kanban || stages[0];
         if (!organized[stage]) organized[stage] = [];
         organized[stage].push(contact);

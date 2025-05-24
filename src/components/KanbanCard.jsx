@@ -39,6 +39,19 @@ export default function KanbanCard({ contact, index }) {
             {contact.email && phone && <span className="mx-2">·</span>}
             {contact.email && <span>{contact.email}</span>}
           </div>
+          {/* Mostra atributos que começam com kbw_ */}
+          {contact.custom_attributes && (
+            <div className="mt-2 text-xs text-gray-500">
+              {Object.entries(contact.custom_attributes)
+                .filter(([key, value]) => key.startsWith('kbw_') && value !== null && value !== undefined && value !== '')
+                .map(([key, value]) => (
+                  <div key={key} className="truncate">
+                    <span className="font-semibold">{key.replace('kbw_', '')}: </span>
+                    <span>{String(value)}</span>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
       )}
     </Draggable>
