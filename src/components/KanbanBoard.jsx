@@ -55,6 +55,13 @@ function KanbanBoard() {
     };
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (reloadRef.current) reloadRef.current();
+    }, 30000); // 30 segundos
+    return () => clearInterval(interval);
+  }, []);
+
   const onDragEnd = async ({ source, destination }) => {
     if (!destination) return;
 
