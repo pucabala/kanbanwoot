@@ -12,7 +12,7 @@ const chatwootHeaders = {
 };
 
 async function chatwootFetch(endpoint, options = {}) {
-  const url = `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}${endpoint}`;
+  const url = `${CHATWOOT_URL}/api/v1/account/${ACCOUNT_ID}${endpoint}`;
   debugLog('chatwootFetch', url, options);
   try {
     const response = await fetch(url, { ...options, headers: chatwootHeaders });
@@ -62,9 +62,15 @@ export async function getContacts() {
 export async function getKanbanStages() {
   debugLog('api.js: getKanbanStages chamado');
   try {
-    const data = await chatwootFetch('/contact_custom_attributes');
-    const kanbanAttr = data.find(attr => attr.attribute_key === 'kanban');
-    return kanbanAttr ? kanbanAttr.attribute_display_values : [];
+    // Buscar todos os custom_attribute_definitions
+    const data = await chatwootFetch('/custom_attribute_definitions');
+    // Filtrar pelo attribute_model = "contact_attribute" e attribute_key = "kanban"
+    const kanbanAttr = (data || []).find(attr => attr.attribute_model === 'contact_attribute' && attr.attribute_key === 'kanban');
+    if (!kanbanAttr) {
+      throw new Error('Atributo customizado "kanban" não encontrado');
+    }
+    // Retornar os valores possíveis do atributo (attribute_values)
+    return kanbanAttr.attribute_values || [];
   } catch (error) {
     debugLog('Erro ao buscar estágios do Kanban:', error);
     throw error;
