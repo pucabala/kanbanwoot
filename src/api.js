@@ -90,52 +90,328 @@ export async function updateKanbanStage(contactId, newStage) {
     throw error;
   }
 }
-
-// WebSocket para mensagens em tempo real
-let chatwootSocket = null;
-let chatwootSocketStatus = 'disconnected';
-
-export function connectChatwootWebSocket(onMessage, onStatusChange) {
-  if (chatwootSocket) {
-    chatwootSocket.close();
+export async function getContactById(contactId) {
+  debugLog('api.js: getContactById chamado', contactId);
+  try {
+    const data = await chatwootFetch(`/contacts/${contactId}`);
+    return data.payload || null;
+  } catch (error) {
+    debugLog('Erro ao buscar contato por ID:', error);
+    throw error;
   }
-  // Exemplo de endpoint WebSocket do Chatwoot (ajuste conforme necessário)
-  const wsUrl = CHATWOOT_URL.replace(/^http/, 'ws') + `/cable`;
-  chatwootSocket = new WebSocket(wsUrl);
-
-  chatwootSocket.onopen = () => {
-    chatwootSocketStatus = 'connected';
-    if (onStatusChange) onStatusChange('connected');
-    debugLog('WebSocket conectado:', wsUrl);
-    // Exemplo de subscribe para mensagens de conta (ajuste conforme necessário)
-    if (ACCOUNT_ID) {
-      const subscribeMsg = {
-        command: 'subscribe',
-        identifier: JSON.stringify({ channel: 'RoomChannel', account_id: ACCOUNT_ID })
-      };
-      chatwootSocket.send(JSON.stringify(subscribeMsg));
-      debugLog('WebSocket subscribe enviado:', subscribeMsg);
-    }
-  };
-  chatwootSocket.onclose = () => {
-    chatwootSocketStatus = 'disconnected';
-    if (onStatusChange) onStatusChange('disconnected');
-    debugLog('WebSocket desconectado');
-  };
-  chatwootSocket.onerror = (err) => {
-    debugLog('WebSocket erro:', err);
-    if (onStatusChange) onStatusChange('error');
-  };
-  chatwootSocket.onmessage = (event) => {
-    debugLog('WebSocket mensagem recebida:', event.data);
-    if (onMessage) onMessage(event.data);
-  };
 }
-
-export function disconnectChatwootWebSocket() {
-  if (chatwootSocket) {
-    chatwootSocket.close();
-    chatwootSocket = null;
-    chatwootSocketStatus = 'disconnected';
+export async function createContact(contactData) {
+  debugLog('api.js: createContact chamado', contactData);
+  try {
+    return await chatwootFetch('/contacts', {
+      method: 'POST',
+      body: JSON.stringify(contactData)
+    });
+  } catch (error) {
+    debugLog('Erro ao criar contato:', error);
+    throw error;
+  }
+}
+export async function updateContact(contactId, contactData) {
+  debugLog('api.js: updateContact chamado', contactId, contactData);
+  try {
+    return await chatwootFetch(`/contacts/${contactId}`, {
+      method: 'PUT',
+      body: JSON.stringify(contactData)
+    });
+  } catch (error) {
+    debugLog('Erro ao atualizar contato:', error);
+    throw error;
+  }
+}
+export async function deleteContact(contactId) {
+  debugLog('api.js: deleteContact chamado', contactId);
+  try {
+    return await chatwootFetch(`/contacts/${contactId}`, {
+      method: 'DELETE'
+    });
+  } catch (error) {
+    debugLog('Erro ao deletar contato:', error);
+    throw error;
+  }
+}
+export async function getConversations(contactId) {
+  debugLog('api.js: getConversations chamado', contactId);
+  try {
+    const data = await chatwootFetch(`/contacts/${contactId}/conversations`);
+    return data.payload || [];
+  } catch (error) {
+    debugLog('Erro ao buscar conversas do contato:', error);
+    throw error;
+  }
+}
+export async function getConversationById(conversationId) {
+  debugLog('api.js: getConversationById chamado', conversationId);
+  try {
+    const data = await chatwootFetch(`/conversations/${conversationId}`);
+    return data.payload || null;
+  } catch (error) {
+    debugLog('Erro ao buscar conversa por ID:', error);
+    throw error;
+  }
+}
+export async function createConversation(contactId, conversationData) {
+  debugLog('api.js: createConversation chamado', contactId, conversationData);
+  try {
+    return await chatwootFetch(`/contacts/${contactId}/conversations`, {
+      method: 'POST',
+      body: JSON.stringify(conversationData)
+    });
+  } catch (error) {
+    debugLog('Erro ao criar conversa:', error);
+    throw error;
+  }
+}
+export async function updateConversation(conversationId, conversationData) {
+  debugLog('api.js: updateConversation chamado', conversationId, conversationData);
+  try {
+    return await chatwootFetch(`/conversations/${conversationId}`, {
+      method: 'PUT',
+      body: JSON.stringify(conversationData)
+    });
+  } catch (error) {
+    debugLog('Erro ao atualizar conversa:', error);
+    throw error;
+  }
+}
+export async function deleteConversation(conversationId) {
+  debugLog('api.js: deleteConversation chamado', conversationId);
+  try {
+    return await chatwootFetch(`/conversations/${conversationId}`, {
+      method: 'DELETE'
+    });
+  } catch (error) {
+    debugLog('Erro ao deletar conversa:', error);
+    throw error;
+  }
+}
+export async function getMessages(conversationId) {
+  debugLog('api.js: getMessages chamado', conversationId);
+  try {
+    const data = await chatwootFetch(`/conversations/${conversationId}/messages`);
+    return data.payload || [];
+  } catch (error) {
+    debugLog('Erro ao buscar mensagens da conversa:', error);
+    throw error;
+  }
+}
+export async function createMessage(conversationId, messageData) {
+  debugLog('api.js: createMessage chamado', conversationId, messageData);
+  try {
+    return await chatwootFetch(`/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify(messageData)
+    });
+  } catch (error) {
+    debugLog('Erro ao criar mensagem:', error);
+    throw error;
+  }
+}
+export async function updateMessage(conversationId, messageId, messageData) {
+  debugLog('api.js: updateMessage chamado', conversationId, messageId, messageData);
+  try {
+    return await chatwootFetch(`/conversations/${conversationId}/messages/${messageId}`, {
+      method: 'PUT',
+      body: JSON.stringify(messageData)
+    });
+  } catch (error) {
+    debugLog('Erro ao atualizar mensagem:', error);
+    throw error;
+  }
+}
+export async function deleteMessage(conversationId, messageId) {
+  debugLog('api.js: deleteMessage chamado', conversationId, messageId);
+  try {
+    return await chatwootFetch(`/conversations/${conversationId}/messages/${messageId}`, {
+      method: 'DELETE'
+    });
+  } catch (error) {
+    debugLog('Erro ao deletar mensagem:', error);
+    throw error;
+  }
+}
+export async function getCustomAttributes() {
+  debugLog('api.js: getCustomAttributes chamado');
+  try {
+    const data = await chatwootFetch('/custom_attributes');
+    return data.payload || [];
+  } catch (error) {
+    debugLog('Erro ao buscar atributos customizados:', error);
+    throw error;
+  }
+}
+export async function createCustomAttribute(attributeData) {
+  debugLog('api.js: createCustomAttribute chamado', attributeData);
+  try {
+    return await chatwootFetch('/custom_attributes', {
+      method: 'POST',
+      body: JSON.stringify(attributeData)
+    });
+  } catch (error) {
+    debugLog('Erro ao criar atributo customizado:', error);
+    throw error;
+  }
+}
+export async function updateCustomAttribute(attributeId, attributeData) {
+  debugLog('api.js: updateCustomAttribute chamado', attributeId, attributeData);
+  try {
+    return await chatwootFetch(`/custom_attributes/${attributeId}`, {
+      method: 'PUT',
+      body: JSON.stringify(attributeData)
+    });
+  } catch (error) {
+    debugLog('Erro ao atualizar atributo customizado:', error);
+    throw error;
+  }
+}
+export async function deleteCustomAttribute(attributeId) {
+  debugLog('api.js: deleteCustomAttribute chamado', attributeId);
+  try {
+    return await chatwootFetch(`/custom_attributes/${attributeId}`, {
+      method: 'DELETE'
+    });
+  } catch (error) {
+    debugLog('Erro ao deletar atributo customizado:', error);
+    throw error;
+  }
+}
+export async function getCustomAttributeDefinitions() {
+  debugLog('api.js: getCustomAttributeDefinitions chamado');
+  try {
+    const data = await chatwootFetch('/custom_attribute_definitions');
+    return data.payload || [];
+  } catch (error) {
+    debugLog('Erro ao buscar definições de atributos customizados:', error);
+    throw error;
+  }
+}
+export async function createCustomAttributeDefinition(definitionData) {
+  debugLog('api.js: createCustomAttributeDefinition chamado', definitionData);
+  try {
+    return await chatwootFetch('/custom_attribute_definitions', {
+      method: 'POST',
+      body: JSON.stringify(definitionData)
+    });
+  } catch (error) {
+    debugLog('Erro ao criar definição de atributo customizado:', error);
+    throw error;
+  }
+}
+export async function updateCustomAttributeDefinition(definitionId, definitionData) {
+  debugLog('api.js: updateCustomAttributeDefinition chamado', definitionId, definitionData);
+  try {
+    return await chatwootFetch(`/custom_attribute_definitions/${definitionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(definitionData)
+    });
+  } catch (error) {
+    debugLog('Erro ao atualizar definição de atributo customizado:', error);
+    throw error;
+  }
+}
+export async function deleteCustomAttributeDefinition(definitionId) {
+  debugLog('api.js: deleteCustomAttributeDefinition chamado', definitionId);
+  try {
+    return await chatwootFetch(`/custom_attribute_definitions/${definitionId}`, {
+      method: 'DELETE'
+    });
+  } catch (error) {
+    debugLog('Erro ao deletar definição de atributo customizado:', error);
+    throw error;
+  }
+}
+export async function getTags() {
+  debugLog('api.js: getTags chamado');
+  try {
+    const data = await chatwootFetch('/tags');
+    return data.payload || [];
+  } catch (error) {
+    debugLog('Erro ao buscar tags:', error);
+    throw error;
+  }
+}
+export async function createTag(tagData) {
+  debugLog('api.js: createTag chamado', tagData);
+  try {
+    return await chatwootFetch('/tags', {
+      method: 'POST',
+      body: JSON.stringify(tagData)
+    });
+  } catch (error) {
+    debugLog('Erro ao criar tag:', error);
+    throw error;
+  }
+}
+export async function updateTag(tagId, tagData) {
+  debugLog('api.js: updateTag chamado', tagId, tagData);
+  try {
+    return await chatwootFetch(`/tags/${tagId}`, {
+      method: 'PUT',
+      body: JSON.stringify(tagData)
+    });
+  } catch (error) {
+    debugLog('Erro ao atualizar tag:', error);
+    throw error;
+  }
+}
+export async function deleteTag(tagId) {
+  debugLog('api.js: deleteTag chamado', tagId);
+  try {
+    return await chatwootFetch(`/tags/${tagId}`, {
+      method: 'DELETE'
+    });
+  } catch (error) {
+    debugLog('Erro ao deletar tag:', error);
+    throw error;
+  }
+}
+export async function getUsers() {
+  debugLog('api.js: getUsers chamado');
+  try {
+    const data = await chatwootFetch('/users');
+    return data.payload || [];
+  } catch (error) {
+    debugLog('Erro ao buscar usuários:', error);
+    throw error;
+  }
+}
+export async function createUser(userData) {
+  debugLog('api.js: createUser chamado', userData);
+  try {
+    return await chatwootFetch('/users', {
+      method: 'POST',
+      body: JSON.stringify(userData)
+    });
+  } catch (error) {
+    debugLog('Erro ao criar usuário:', error);
+    throw error;
+  }
+}
+export async function updateUser(userId, userData) {
+  debugLog('api.js: updateUser chamado', userId, userData);
+  try {
+    return await chatwootFetch(`/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData)
+    });
+  } catch (error) {
+    debugLog('Erro ao atualizar usuário:', error);
+    throw error;
+  }
+}
+export async function deleteUser(userId) {
+  debugLog('api.js: deleteUser chamado', userId);
+  try {
+    return await chatwootFetch(`/users/${userId}`, {
+      method: 'DELETE'
+    });
+  } catch (error) {
+    debugLog('Erro ao deletar usuário:', error);
+    throw error;
   }
 }

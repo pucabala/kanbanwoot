@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useState, useRef } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
-import { updateKanbanStage, connectChatwootWebSocket, disconnectChatwootWebSocket } from '../api';
+import { updateKanbanStage } from '../api';
 import { kanbanReducer } from '../reducers/kanbanReducer';
 import Notification from './Notification';
 import ErrorMessage from './ErrorMessage';
@@ -47,9 +47,11 @@ function KanbanBoard() {
         // Ignora mensagens não JSON
       }
     }
-    connectChatwootWebSocket(handleWsMessage, setWsStatus);
+    // Aqui você pode implementar conexão WebSocket real se desejar
+    // handleWsMessage pode ser chamado manualmente em testes
+    // No momento, não faz nada pois não há implementação
     return () => {
-      disconnectChatwootWebSocket();
+      // cleanup
     };
   }, []);
 
