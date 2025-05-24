@@ -12,7 +12,8 @@ const chatwootHeaders = {
 };
 
 async function chatwootFetch(endpoint, options = {}) {
-  const url = `${CHATWOOT_URL}/api/v1/account/${ACCOUNT_ID}${endpoint}`;
+  // Corrigido para /accounts/ (no plural)
+  const url = `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}${endpoint}`;
   debugLog('chatwootFetch', url, options);
   try {
     const response = await fetch(url, { ...options, headers: chatwootHeaders });
@@ -87,5 +88,54 @@ export async function updateKanbanStage(contactId, newStage) {
   } catch (error) {
     debugLog('Erro ao atualizar estágio do Kanban:', error);
     throw error;
+  }
+}
+
+// WebSocket para mensagens em tempo real
+let chatwootSocket = null;
+let chatwootSocketStatus = 'disconnected';
+
+export function connectChatwootWebSocket(onMessage, onStatusChange) {
+  if (chatwootSocket) {
+    chatwootSocket.close();
+  }
+  // Exemplo de endpoint WebSocket do Chatwoot (ajuste conforme necessário)
+  const wsUrl = CHATWOOT_URL.replace(/^http/, 'ws') + `/cable`;
+  chatwootSocket = new WebSocket(wsUrl);
+
+  chatwootSocket.onopen = () => {
+    chatwootSocketStatus = 'connected';
+    if (onStatusChange) onStatusChange('connected');
+    debugLog('WebSocket conectado:', wsUrl);
+    // Exemplo de subscribe para mensagens de conta (ajuste conforme necessário)
+    if (ACCOUNT_ID) {
+      const subscribeMsg = {
+        command: 'subscribe',
+        identifier: JSON.stringify({ channel: 'RoomChannel', account_id: ACCOUNT_ID })
+      };
+      chatwootSocket.send(JSON.stringify(subscribeMsg));
+      debugLog('WebSocket subscribe enviado:', subscribeMsg);
+    }
+  };
+  chatwootSocket.onclose = () => {
+    chatwootSocketStatus = 'disconnected';
+    if (onStatusChange) onStatusChange('disconnected');
+    debugLog('WebSocket desconectado');
+  };
+  chatwootSocket.onerror = (err) => {
+    debugLog('WebSocket erro:', err);
+    if (onStatusChange) onStatusChange('error');
+  };
+  chatwootSocket.onmessage = (event) => {
+    debugLog('WebSocket mensagem recebida:', event.data);
+    if (onMessage) onMessage(event.data);
+  };
+}
+
+export function disconnectChatwootWebSocket() {
+  if (chatwootSocket) {
+    chatwootSocket.close();
+    chatwootSocket = null;
+    chatwootSocketStatus = 'disconnected';
   }
 }
