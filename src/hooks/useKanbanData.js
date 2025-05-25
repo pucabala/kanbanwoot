@@ -4,33 +4,16 @@ import { useEffect, useState } from 'react';
 import { getContacts, getCustomAttributes, updateContactCustomAttribute } from '../api';
 import { useLocation } from 'react-router-dom';
 
-/**
- * Hook para obter o valor de um parâmetro da query string usando React Router
- * @param {string} param - Nome do parâmetro
- * @returns {string|null}
- */
-function useQueryParam(param) {
-  // Tenta pegar do React Router
-  const location = useLocation();
-  const [value, setValue] = useState(() => new URLSearchParams(location.search).get(param) || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(param) : null));
-
-  useEffect(() => {
-    // Sempre tenta pegar do React Router, mas faz fallback para window.location.search
-    const routerValue = new URLSearchParams(location.search).get(param);
-    const winValue = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(param) : null;
-    setValue(routerValue || winValue);
-  }, [location.search, param]);
-
-  return value;
-}
-
 export function useDynamicKanbanData() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const param = searchParams.get('kbw');
+
   const [contacts, setContacts] = useState([]); // Lista de contatos
   const [columns, setColumns] = useState([]); // Valores possíveis do atributo (colunas)
   const [attribute, setAttribute] = useState(null); // Objeto do atributo customizado selecionado
   const [loading, setLoading] = useState(true); // Estado de loading
   const [error, setError] = useState(null); // Estado de erro
-  const param = useQueryParam('kbw'); // Usa o hook para ler o parâmetro sempre atualizado
 
   useEffect(() => {
     async function fetchData() {
