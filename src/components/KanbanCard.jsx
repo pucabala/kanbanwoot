@@ -57,6 +57,8 @@ export default function KanbanCard({ contact, index }) {
           </div>
           <div className="text-sm text-gray-600 mt-1">
             {phone && <span>{phone}</span>}
+          </div>
+          <div className="text-sm text-gray-600 mt-1">
             {contact.email && phone && <span className="mx-2">·</span>}
             {contact.email && <span>{contact.email}</span>}
           </div>
