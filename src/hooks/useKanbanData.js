@@ -48,6 +48,7 @@ export function useDynamicKanbanData() {
           getCustomAttributes(),
           getContacts()
         ]);
+        console.log('DEBUG: custom attributes recebidos:', attrs);
         // Filtra atributos do tipo lista e prefixo kbw_
         let listAttrs = (attrs || []).filter(a => a.attribute_type === 'list' && a.attribute_key.startsWith('kbw_'));
         let selectedAttr = null;
