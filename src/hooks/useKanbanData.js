@@ -51,6 +51,13 @@ export function useDynamicKanbanData() {
             console.info('[Kanban] Selecionado primeiro atributo do tipo lista:', selectedAttr.attribute_key);
           }
         }
+        if (!selectedAttr && listAttrs.length === 0) {
+          console.warn('[Kanban] Nenhum atributo do tipo lista (kbw_) encontrado. Atributos válidos para Kanban:');
+          const validAttrs = (attrs || []).filter(a => a.attribute_display_type === 6);
+          validAttrs.forEach(a => {
+            console.info(`- attribute_key: ${a.attribute_key} | display_name: ${a.attribute_display_name}`);
+          });
+        }
         if (!selectedAttr) {
           console.error('[Kanban] Nenhum atributo customizado do tipo lista encontrado.');
           throw new Error('Nenhum atributo customizado do tipo lista encontrado.');
