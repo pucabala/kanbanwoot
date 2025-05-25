@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   getContacts,
@@ -14,54 +14,21 @@ export function useDynamicKanbanData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const lastParamRef = useRef(null);
+  const param = useMemo(() => {
+    const searchParams = new URLSearchParams(location.search);
+    return searchParams.get('kbw');
+  }, [location.search]);
 
-  // Derivado do atributo selecionado
   const columns = useMemo(() => attribute?.attribute_values || [], [attribute]);
 
-  const selectKanbanAttribute = (attrs, param) => {
-    if (param) {
-      const attrByKey = attrs.find(
-        a => a.attribute_display_type === 'list' && a.attribute_key === param
-      );
-      if (attrByKey) {
-        console.info('[Kanban] Atributo selecionado via URL:', attrByKey.attribute_key);
-        return attrByKey;
-      }
-      console.warn('[Kanban] Atributo encontrado com a chave da URL:', param);
-    }
-
-    const kbwList = attrs.filter(
-      a => a.attribute_display_type === 'list' && a.attribute_key.startsWith('kbw_')
-    );
-    if (kbwList.length > 0) {
-      console.info('[Kanban] Atributo padrão (kbw_) selecionado:', kbwList[0].attribute_key);
-      return kbwList[0];
-    }
-
-    const anyListAttr = attrs.find(a => a.attribute_display_type === 'list');
-    if (anyListAttr) {
-      console.info('[Kanban] Primeiro atributo do tipo lista selecionado:', anyListAttr.attribute_key);
-      return anyListAttr;
-    }
-
-    console.warn('[Kanban] Nenhum atributo do tipo lista encontrado.');
-    return null;
-  };
-
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const param = searchParams.get('kbw');
-
-    if (lastParamRef.current === param) return;
-    lastParamRef.current = param;
-
     console.group('useDynamicKanbanData: ciclo de carregamento');
     console.info('[Kanban] Parâmetro da URL (kbw):', param);
 
     async function fetchData() {
       setLoading(true);
       setError(null);
+
       try {
         let attrs = [];
         let selectedAttr = null;
@@ -77,37 +44,50 @@ export function useDynamicKanbanData() {
           attrs = await getCustomAttributes();
         }
 
-        let contactsData = await getContacts();
+        const contactsData = await getContacts();
 
-        console.debug('[Kanban][DEBUG] Atributos:', attrs);
-        console.debug('[Kanban][DEBUG] Contatos:', contactsData);
+        console.debug('[Kanban][DEBUG] Atributos recebidos:', attrs);
+        console.debug('[Kanban][DEBUG] Contatos recebidos:', contactsData);
 
         if (!selectedAttr) {
-          selectedAttr = selectKanbanAttribute(attrs, param);
+          selectedAttr = attrs.find(
+            a => a.attribute_display_type === 'list' && a.attribute_key === param
+          );
         }
 
         if (!selectedAttr) {
+          selectedAttr = attrs.find(
+            a => a.attribute_display_type === 'list' && a.attribute_key.startsWith('kbw_')
+          );
+        }
+
+        if (!selectedAttr) {
+          selectedAttr = attrs.find(a => a.attribute_display_type === 'list');
+        }
+
+        if (!selectedAttr) {
+          console.error('[Kanban] Nenhum atributo do tipo lista encontrado.');
           throw new Error('Nenhum atributo customizado do tipo lista encontrado.');
         }
 
-        setAttribute(selectedAttr);
-
-        // Filtro: somente contatos com algum atributo "kbw_" diferente de null
-        contactsData = contactsData.filter(contact => {
-          return Object.entries(contact.custom_attributes || {}).some(
+        const filteredContacts = contactsData.filter(contact =>
+          Object.entries(contact.custom_attributes || {}).some(
             ([key, value]) => key.startsWith('kbw_') && value !== null
-          );
-        });
+          )
+        );
 
-        setContacts(contactsData);
-        console.info('[Kanban] Contatos filtrados:', contactsData.length);
-        console.info('[Kanban] Colunas do atributo selecionado:', selectedAttr.attribute_values?.map(v => v.value));
+        setAttribute(selectedAttr);
+        setContacts(filteredContacts);
+
+        console.info('[Kanban] Atributo selecionado:', selectedAttr.attribute_key);
+        console.info('[Kanban] Contatos filtrados:', filteredContacts.length);
+        console.info('[Kanban] Colunas:', selectedAttr.attribute_values?.map(v => v.value));
       } catch (err) {
         if (err.response?.status === 404) {
           console.warn('[Kanban] Atributo não encontrado no servidor.');
         }
-        setError(err);
         console.error('[Kanban] Erro ao carregar dados:', err);
+        setError(err);
       } finally {
         setLoading(false);
         console.groupEnd();
@@ -115,13 +95,22 @@ export function useDynamicKanbanData() {
     }
 
     fetchData();
-  }, [location.search]);
+  }, [param]);
 
   const updateContactStage = async (contactId, value) => {
+    if (!attribute) return;
     await updateContactCustomAttribute(contactId, attribute.attribute_key, value);
   };
 
   const isReady = !loading && !error && attribute;
 
-  return { contacts, columns, attribute, loading, error, isReady, updateContactStage };
+  return {
+    contacts,
+    columns,
+    attribute,
+    loading,
+    error,
+    isReady,
+    updateContactStage
+  };
 }
