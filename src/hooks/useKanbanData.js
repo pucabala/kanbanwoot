@@ -38,7 +38,7 @@ export function useDynamicKanbanData() {
           if (selectedAttr) {
             console.info('[Kanban] Atributo selecionado via URL:', selectedAttr.attribute_key);
           } else {
-            console.warn('[Kanban] Nenhum atributo encontrado com a chave da URL:', param);
+            console.warn('[Kanban] Atributo encontrado com a chave da URL:', param);
           }
         }
         if (!selectedAttr && listAttrs.length > 0) {
