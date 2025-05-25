@@ -2,41 +2,25 @@
 // Hook para Kanban dinâmico baseado em atributo customizado do tipo lista (prefixo kbw_)
 import { useEffect, useState } from 'react';
 import { getContacts, getCustomAttributes, updateContactCustomAttribute } from '../api';
+import { useLocation } from 'react-router-dom';
 
 /**
- * Retorna o valor de um parâmetro da query string da URL
+ * Hook para obter o valor de um parâmetro da query string usando React Router
  * @param {string} param - Nome do parâmetro
  * @returns {string|null}
  */
-function getQueryParam(param) {
-  if (typeof window === 'undefined') return null;
-  const params = new URLSearchParams(window.location.search);
-  return params.get(param);
+function useQueryParam(param) {
+  const { search } = useLocation();
+  return new URLSearchParams(search).get(param);
 }
 
-/**
- * Hook React para carregar contatos e colunas do Kanban de forma dinâmica.
- * - Busca todos os atributos customizados do tipo lista com prefixo "kbw_"
- * - Seleciona o atributo correto via query string (?kbw=...) ou o primeiro disponível
- * - Usa os valores desse atributo como colunas do Kanban
- * - Organiza os contatos conforme o valor desse atributo
- * - Permite atualizar o valor do atributo customizado do contato (drag-and-drop)
- *
- * @returns {{
- *   contacts: any[], // Lista de contatos
- *   columns: string[], // Valores possíveis do atributo (colunas)
- *   attribute: object, // Objeto do atributo customizado selecionado
- *   loading: boolean, // Indica se está carregando
- *   error: Error|null, // Erro, se houver
- *   updateContactStage: function // Função para atualizar o valor do atributo do contato
- * }}
- */
 export function useDynamicKanbanData() {
   const [contacts, setContacts] = useState([]); // Lista de contatos
   const [columns, setColumns] = useState([]); // Valores possíveis do atributo (colunas)
   const [attribute, setAttribute] = useState(null); // Objeto do atributo customizado selecionado
   const [loading, setLoading] = useState(true); // Estado de loading
   const [error, setError] = useState(null); // Estado de erro
+  const param = useQueryParam('kbw'); // Usa o hook para ler o parâmetro sempre atualizado
 
   useEffect(() => {
     async function fetchData() {
@@ -52,8 +36,7 @@ export function useDynamicKanbanData() {
         // Filtra atributos do tipo lista e prefixo kbw_
         let listAttrs = (attrs || []).filter(a => a.attribute_display_type === 6 && a.attribute_key.startsWith('kbw_'));
         let selectedAttr = null;
-        // Lê parâmetro da query string (?kbw=...)
-        const param = getQueryParam('kbw');
+        // Usa o parâmetro da query string (?kbw=...)
         if (param) {
           selectedAttr = (attrs || []).find(a => a.attribute_display_type === 6 && a.attribute_key === param);
         }
@@ -78,7 +61,7 @@ export function useDynamicKanbanData() {
       }
     }
     fetchData();
-  }, []);
+  }, [param]); // Atualiza sempre que o parâmetro mudar
 
   /**
    * Atualiza o valor do atributo customizado do contato (usado no drag-and-drop)
