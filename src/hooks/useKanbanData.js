@@ -49,19 +49,24 @@ export function useDynamicKanbanData() {
           getContacts()
         ]);
         // Filtra atributos do tipo lista e prefixo kbw_
-        const listAttrs = (attrs || []).filter(a => a.attribute_type === 'list' && a.attribute_key.startsWith('kbw_'));
+        let listAttrs = (attrs || []).filter(a => a.attribute_type === 'list' && a.attribute_key.startsWith('kbw_'));
         let selectedAttr = null;
         // Lê parâmetro da query string (?kbw=...)
         const param = getQueryParam('kbw');
         if (param) {
-          selectedAttr = listAttrs.find(a => a.attribute_key === param);
+          selectedAttr = (attrs || []).find(a => a.attribute_type === 'list' && a.attribute_key === param);
         }
-        // Se não houver parâmetro ou não encontrar, usa o primeiro atributo disponível
-        if (!selectedAttr) {
+        // Se não houver parâmetro ou não encontrar, usa o primeiro atributo kbw_
+        if (!selectedAttr && listAttrs.length > 0) {
           selectedAttr = listAttrs[0];
         }
+        // Se ainda não encontrar, usa o primeiro atributo do tipo lista (sem prefixo)
+        if (!selectedAttr) {
+          const anyListAttr = (attrs || []).find(a => a.attribute_type === 'list');
+          if (anyListAttr) selectedAttr = anyListAttr;
+        }
         // Se não encontrar nenhum atributo válido, lança erro
-        if (!selectedAttr) throw new Error('Nenhum atributo customizado do tipo lista com prefixo "kbw_" encontrado.');
+        if (!selectedAttr) throw new Error('Nenhum atributo customizado do tipo lista encontrado.');
         setAttribute(selectedAttr); // Seta o atributo selecionado
         setColumns(selectedAttr.attribute_values || []); // Seta as colunas possíveis
         setContacts(contactsData); // Seta os contatos
