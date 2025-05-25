@@ -64,19 +64,14 @@ export async function getContacts() {
 export async function getCustomAttributes() {
   debugLog('api.js: getCustomAttributes chamado');
   try {
-    // Tenta com attribute_model=contact_attribute (string)
-    let data = await chatwootFetch('/custom_attribute_definitions?attribute_model=contact_attribute');
-    if (Array.isArray(data.payload) && data.payload.length > 0) {
-      return data.payload;
-    }
-    // Se não vier nada, tenta com attribute_model=1 (número)
-    data = await chatwootFetch('/custom_attribute_definitions?attribute_model=1');
-    if (Array.isArray(data.payload) && data.payload.length > 0) {
-      return data.payload;
-    }
-    // Se ainda assim não vier nada, busca sem filtro
-    data = await chatwootFetch('/custom_attribute_definitions');
-    return data.payload || [];
+    // Busca todos os atributos customizados
+    const data = await chatwootFetch('/custom_attribute_definitions');
+    // Filtra apenas os de contato
+    const all = data.payload || data || [];
+    const filtered = Array.isArray(all)
+      ? all.filter(attr => attr.attribute_model === 'contact_attribute')
+      : [];
+    return filtered;
   } catch (error) {
     debugLog('Erro ao buscar atributos customizados:', error);
     throw error;

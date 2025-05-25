@@ -1,32 +1,70 @@
 // Hook principal para carregar e gerenciar dados do Kanban dinâmico
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getContacts, getCustomAttributes, updateContactCustomAttribute, getCustomAttributeById } from '../api';
+import {
+  getContacts,
+  getCustomAttributes,
+  updateContactCustomAttribute,
+  getCustomAttributeById
+} from '../api';
 
 // Hook customizado para fornecer dados do Kanban de acordo com atributos customizados
 export function useDynamicKanbanData() {
-  const location = useLocation(); // Hook do React Router para acessar a URL
-
-  // Estados locais para contatos, colunas, atributo selecionado, loading e erro
+  const location = useLocation();
   const [contacts, setContacts] = useState([]);
   const [columns, setColumns] = useState([]);
   const [attribute, setAttribute] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Efeito para buscar dados sempre que a URL mudar
+  // Função para selecionar o atributo correto para o Kanban
+  const selectKanbanAttribute = (attrs, param) => {
+    // Se o parâmetro da URL for string, tenta encontrar pelo attribute_key
+    if (param) {
+      const attrByKey = attrs.find(
+        a => a.attribute_display_type === 'list' && a.attribute_key === param
+      );
+      if (attrByKey) {
+        console.info('[Kanban] Atributo selecionado via URL:', attrByKey.attribute_key);
+        return attrByKey;
+      } else {
+        console.warn('[Kanban] Nenhum atributo encontrado com a chave da URL:', param);
+      }
+    }
+    // Se não encontrou pelo parâmetro, seleciona o primeiro atributo do tipo lista (kbw_)
+    const listAttrs = attrs.filter(
+      a => a.attribute_display_type === 'list' && a.attribute_key.startsWith('kbw_')
+    );
+    if (listAttrs.length > 0) {
+      console.info('[Kanban] Atributo padrão selecionado:', listAttrs[0].attribute_key);
+      return listAttrs[0];
+    }
+    // Se ainda não encontrou, seleciona qualquer atributo do tipo lista
+    const anyListAttr = attrs.find(a => a.attribute_display_type === 'list');
+    if (anyListAttr) {
+      console.info('[Kanban] Selecionado primeiro atributo do tipo lista:', anyListAttr.attribute_key);
+      return anyListAttr;
+    }
+    // Se não encontrou nenhum atributo válido, mostra aviso
+    if (attrs.length > 0) {
+      console.warn('[Kanban] Nenhum atributo do tipo lista (kbw_) encontrado. Atributos válidos para Kanban:');
+      attrs.filter(a => a.attribute_display_type === 'list').forEach(a => {
+        console.info(`- attribute_key: ${a.attribute_key} | display_name: ${a.attribute_display_name}`);
+      });
+    }
+    return null;
+  };
+
   useEffect(() => {
     console.group('useDynamicKanbanData: ciclo de carregamento');
-    const searchParams = new URLSearchParams(location.search); // Pega parâmetros da URL
-    const param = searchParams.get('kbw'); // Pega parâmetro específico para o Kanban
+    const searchParams = new URLSearchParams(location.search);
+    const param = searchParams.get('kbw');
     console.info('[Kanban] Parâmetro da URL (kbw):', param);
 
-    // Função assíncrona para buscar dados
     async function fetchData() {
       setLoading(true);
       setError(null);
       try {
-        console.info('[Kanban] Buscando atributos customizados e contatos...');
         let attrs = [];
         let selectedAttr = null;
         // Se o parâmetro da URL for um número, busca direto pelo ID
@@ -46,37 +84,9 @@ export function useDynamicKanbanData() {
         console.debug('[Kanban][DEBUG] getContacts() retorno:', contactsData);
         console.info('[Kanban] Resposta bruta dos atributos customizados:', attrs);
         console.info('[Kanban] Atributos customizados recebidos:', attrs?.length);
-        // Filtra atributos do tipo lista e que começam com 'kbw_'
-        let listAttrs = (attrs || []).filter(a => a.attribute_display_type === 'list' && a.attribute_key.startsWith('kbw_'));
-        console.info('[Kanban] Atributos do tipo lista (kbw_):', listAttrs.map(a => a.attribute_key));
-        // Se não encontrou pelo ID, segue o fluxo normal
+        // Se não encontrou pelo ID, segue o fluxo normal de seleção
         if (!selectedAttr) {
-          if (param) {
-            selectedAttr = (attrs || []).find(a => (a.attribute_display_type === 'list') && a.attribute_key === param);
-            if (selectedAttr) {
-              console.info('[Kanban] Atributo selecionado via URL:', selectedAttr.attribute_key);
-            } else {
-              console.warn('[Kanban] Atributo encontrado com a chave da URL:', param);
-            }
-          }
-          if (!selectedAttr && listAttrs.length > 0) {
-            selectedAttr = listAttrs[0];
-            console.info('[Kanban] Atributo padrão selecionado:', selectedAttr.attribute_key);
-          }
-          if (!selectedAttr) {
-            const anyListAttr = (attrs || []).find(a => a.attribute_display_type === 'list');
-            if (anyListAttr) {
-              selectedAttr = anyListAttr;
-              console.info('[Kanban] Selecionado primeiro atributo do tipo lista:', selectedAttr.attribute_key);
-            }
-          }
-          if (!selectedAttr && listAttrs.length === 0) {
-            console.warn('[Kanban] Nenhum atributo do tipo lista (kbw_) encontrado. Atributos válidos para Kanban:');
-            const validAttrs = (attrs || []).filter(a => a.attribute_display_type === 'list');
-            validAttrs.forEach(a => {
-              console.info(`- attribute_key: ${a.attribute_key} | display_name: ${a.attribute_display_name}`);
-            });
-          }
+          selectedAttr = selectKanbanAttribute(attrs, param);
         }
         if (!selectedAttr) {
           console.error('[Kanban] Nenhum atributo customizado do tipo lista encontrado.');
@@ -97,8 +107,8 @@ export function useDynamicKanbanData() {
       }
     }
 
-    fetchData(); // Executa a busca de dados
-  }, [location.search]); // Executa sempre que a URL mudar
+    fetchData();
+  }, [location.search]);
 
   // Função para atualizar o estágio do contato (coluna do Kanban)
   const updateContactStage = async (contactId, value) => {
