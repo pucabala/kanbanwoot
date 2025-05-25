@@ -1,13 +1,5 @@
-// useKanbanData.js
-// Hook para Kanban dinâmico baseado em atributo customizado do tipo lista (prefixo kbw_)
-import { useEffect, useState } from 'react';
-import { getContacts, getCustomAttributes, updateContactCustomAttribute } from '../api';
-import { useLocation } from 'react-router-dom';
-
 export function useDynamicKanbanData() {
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const param = searchParams.get('kbw');
 
   const [contacts, setContacts] = useState([]);
   const [columns, setColumns] = useState([]);
@@ -16,6 +8,10 @@ export function useDynamicKanbanData() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const param = searchParams.get('kbw');
+    console.log('DEBUG: param =', param);
+
     async function fetchData() {
       setLoading(true);
       setError(null);
@@ -24,9 +20,10 @@ export function useDynamicKanbanData() {
           getCustomAttributes(),
           getContacts()
         ]);
-        console.log('DEBUG: custom attributes recebidos:', attrs, 'param:', param);
+
         let listAttrs = (attrs || []).filter(a => a.attribute_display_type === 6 && a.attribute_key.startsWith('kbw_'));
         let selectedAttr = null;
+
         if (param) {
           selectedAttr = (attrs || []).find(a => a.attribute_display_type === 6 && a.attribute_key === param);
         }
@@ -47,8 +44,9 @@ export function useDynamicKanbanData() {
         setLoading(false);
       }
     }
+
     fetchData();
-  }, [param]);
+  }, [location.search]);
 
   const updateContactStage = async (contactId, value) => {
     await updateContactCustomAttribute(contactId, attribute.attribute_key, value);
