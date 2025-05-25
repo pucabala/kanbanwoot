@@ -10,11 +10,15 @@ import { useLocation } from 'react-router-dom';
  * @returns {string|null}
  */
 function useQueryParam(param) {
+  // Tenta pegar do React Router
   const location = useLocation();
-  const [value, setValue] = useState(() => new URLSearchParams(location.search).get(param));
+  const [value, setValue] = useState(() => new URLSearchParams(location.search).get(param) || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(param) : null));
 
   useEffect(() => {
-    setValue(new URLSearchParams(location.search).get(param));
+    // Sempre tenta pegar do React Router, mas faz fallback para window.location.search
+    const routerValue = new URLSearchParams(location.search).get(param);
+    const winValue = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(param) : null;
+    setValue(routerValue || winValue);
   }, [location.search, param]);
 
   return value;
