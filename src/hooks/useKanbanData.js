@@ -85,7 +85,7 @@ export function useDynamicKanbanData() {
           attrs = await getCustomAttributes();
         }
 
-        const contactsData = await getContacts();
+        let contactsData = await getContacts();
 
         console.debug('[Kanban][DEBUG] getCustomAttributes() retorno:', attrs);
         console.debug('[Kanban][DEBUG] getContacts() retorno:', contactsData);
@@ -99,10 +99,17 @@ export function useDynamicKanbanData() {
           throw new Error('Nenhum atributo customizado do tipo lista encontrado.');
         }
 
+        // FILTRO: Apenas contatos que possuem ao menos um atributo 'kbw_' com valor diferente de null
+        contactsData = contactsData.filter(contact => {
+          return Object.entries(contact.custom_attributes || {}).some(
+            ([key, value]) => key.startsWith('kbw_') && value !== null
+          );
+        });
+
         setAttribute(selectedAttr);
         setContacts(contactsData);
 
-        console.info('[Kanban] Contatos carregados:', contactsData?.length);
+        console.info('[Kanban] Contatos filtrados:', contactsData?.length);
         console.info('[Kanban] Colunas:', selectedAttr.attribute_values?.map(v => v.value));
         console.info('[Kanban] Estado pronto para renderização.');
       } catch (err) {
