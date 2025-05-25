@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 
+import { getContacts, getCustomAttributes, updateContactCustomAttribute, getCustomAttributeById } from '../api';
+
+
 export function useDynamicKanbanData() {
   const location = useLocation();
   const [contacts, setContacts] = useState([]);
