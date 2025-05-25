@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 import { getContacts, getCustomAttributes, updateContactCustomAttribute } from '../api';
 
-export function useDynamicKanbanData() {
+export function useDynamicKanbanData(reloadFlag = 0) {
   const location = useLocation();
 
   // Estado para armazenar contatos filtrados (com atributos que começam com 'kbw_' e não nulos)
@@ -118,14 +118,14 @@ export function useDynamicKanbanData() {
     }
 
     fetchData();
-  }, [location.search]);
+  }, [location.search, reloadFlag]);
 
   // Retorna os dados e estados do hook para o componente consumir
   return { contacts, columns, attribute, loading, error };
 }
 
 // Hook para atualização de atributo customizado de contato
-export function useUpdateContactAttribute() {
+export function useUpdateContactAttribute(onSuccess) {
   const [updating, setUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(null);
 
@@ -135,6 +135,9 @@ export function useUpdateContactAttribute() {
     setUpdateError(null);
     try {
       await updateContactCustomAttribute(contactId, attributeKey, value);
+      if (typeof onSuccess === 'function') {
+        onSuccess(); // Chama callback de sucesso para recarregar dados
+      }
     } catch (error) {
       setUpdateError(error);
       console.error('[DEBUG] Erro ao atualizar atributo do contato:', error);
@@ -148,8 +151,16 @@ export function useUpdateContactAttribute() {
 
 // Hook combinado para facilitar o consumo no componente
 export function useKanbanData() {
-  const { contacts, columns, attribute, loading, error } = useDynamicKanbanData();
-  const { updateContactAttribute, updating, updateError } = useUpdateContactAttribute();
+  // Estado para forçar recarregamento dos dados do Kanban
+  const [reloadFlag, setReloadFlag] = useState(0);
+
+  // Função para forçar reload
+  const reloadKanban = () => setReloadFlag(f => f + 1);
+
+  // Passa reloadFlag como dependência para o hook de dados
+  const { contacts, columns, attribute, loading, error } = useDynamicKanbanData(reloadFlag);
+  // Passa reloadKanban como callback de sucesso para o update
+  const { updateContactAttribute, updating, updateError } = useUpdateContactAttribute(reloadKanban);
 
   return {
     contacts,
@@ -159,6 +170,7 @@ export function useKanbanData() {
     error,
     updateContactAttribute,
     updating,
-    updateError
+    updateError,
+    reloadKanban // expõe função para reload manual se necessário
   };
 }
