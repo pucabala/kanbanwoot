@@ -28,12 +28,13 @@ export function useDynamicKanbanData() {
         ]);
         console.info('[Kanban] Resposta bruta dos atributos customizados:', attrs);
         console.info('[Kanban] Atributos customizados recebidos:', attrs?.length);
-        let listAttrs = (attrs || []).filter(a => a.attribute_display_type === 6 && a.attribute_key.startsWith('kbw_'));
+        let listAttrs = (attrs || []).filter(a => a.attribute_display_type === 'list' && a.attribute_key.startsWith('kbw_'));
         console.info('[Kanban] Atributos do tipo lista (kbw_):', listAttrs.map(a => a.attribute_key));
         let selectedAttr = null;
 
         if (param) {
-          selectedAttr = (attrs || []).find(a => a.attribute_display_type === 6 && a.attribute_key === param);
+          // Permite tanto atributo_display_type === 6 quanto 'list' (compatibilidade)
+          selectedAttr = (attrs || []).find(a => (a.attribute_display_type === 'list') && a.attribute_key === param);
           if (selectedAttr) {
             console.info('[Kanban] Atributo selecionado via URL:', selectedAttr.attribute_key);
           } else {
@@ -45,7 +46,7 @@ export function useDynamicKanbanData() {
           console.info('[Kanban] Atributo padrão selecionado:', selectedAttr.attribute_key);
         }
         if (!selectedAttr) {
-          const anyListAttr = (attrs || []).find(a => a.attribute_display_type === 6);
+          const anyListAttr = (attrs || []).find(a => a.attribute_display_type === 'list');
           if (anyListAttr) {
             selectedAttr = anyListAttr;
             console.info('[Kanban] Selecionado primeiro atributo do tipo lista:', selectedAttr.attribute_key);
@@ -53,7 +54,7 @@ export function useDynamicKanbanData() {
         }
         if (!selectedAttr && listAttrs.length === 0) {
           console.warn('[Kanban] Nenhum atributo do tipo lista (kbw_) encontrado. Atributos válidos para Kanban:');
-          const validAttrs = (attrs || []).filter(a => a.attribute_display_type === 6);
+          const validAttrs = (attrs || []).filter(a => a.attribute_display_type === 'list');
           validAttrs.forEach(a => {
             console.info(`- attribute_key: ${a.attribute_key} | display_name: ${a.attribute_display_name}`);
           });
