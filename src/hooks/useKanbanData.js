@@ -26,6 +26,7 @@ export function useDynamicKanbanData() {
           getCustomAttributes(),
           getContacts()
         ]);
+        console.info('[Kanban] Resposta bruta dos atributos customizados:', attrs);
         console.info('[Kanban] Atributos customizados recebidos:', attrs?.length);
         let listAttrs = (attrs || []).filter(a => a.attribute_display_type === 6 && a.attribute_key.startsWith('kbw_'));
         console.info('[Kanban] Atributos do tipo lista (kbw_):', listAttrs.map(a => a.attribute_key));
