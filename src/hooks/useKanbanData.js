@@ -1,47 +1,32 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import {
-  getContacts,
-  getCustomAttributes,
-  updateContactCustomAttribute,
-  getCustomAttributeById
-} from '../api';
 
 export function useDynamicKanbanData() {
   const location = useLocation();
-
   const [contacts, setContacts] = useState([]);
   const [attribute, setAttribute] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Ref para controlar última query e evitar chamadas desnecessárias
   const lastParamRef = useRef(null);
+  const lastAttributeKeyRef = useRef(null);
 
-  // Colunas derivadas do atributo selecionado, memoizadas para não recalcular sem necessidade
-  const columns = useMemo(() => attribute?.attribute_values || [], [attribute]);
-
-  // Contatos filtrados: só aqueles que tenham algum atributo que começa com "kbw_" e valor diferente de null
-  const filteredContacts = useMemo(() => {
-    if (!contacts.length) return [];
-
-    return contacts.filter(contact => {
-      return Object.entries(contact.custom_attributes || {}).some(
-        ([key, value]) => key.startsWith('kbw_') && value != null
-      );
-    });
-  }, [contacts]);
+  // Memoiza colunas para evitar re-render desnecessário
+  const columns = useMemo(() => {
+    if (!attribute) return [];
+    return attribute.attribute_values || [];
+  }, [attribute]);
 
   useEffect(() => {
-    console.group('useDynamicKanbanData: ciclo de carregamento');
     const searchParams = new URLSearchParams(location.search);
     const param = searchParams.get('kbw');
-    console.info('[Kanban] Parâmetro da URL (kbw):', param);
 
-    // Evita recarregar se o parâmetro não mudou
+    console.group('[DEBUG] useDynamicKanbanData: Efeito disparado');
+    console.log('[DEBUG] Parâmetro atual da URL (kbw):', param);
+    console.log('[DEBUG] Parâmetro anterior:', lastParamRef.current);
+
+    // Evita recarregar se o param não mudou
     if (lastParamRef.current === param) {
-      console.info('[Kanban] Parâmetro repetido, evitando reload.');
-      setLoading(false);
+      console.log('[DEBUG] Parâmetro igual ao anterior, efeito abortado');
       console.groupEnd();
       return;
     }
@@ -54,54 +39,47 @@ export function useDynamicKanbanData() {
         let attrs = [];
         let selectedAttr = null;
 
+        // Buscando atributos customizados
+        attrs = await getCustomAttributes();
+        console.log('[DEBUG] Atributos carregados:', attrs.map(a => a.attribute_key));
+
+        // Seleciona atributo conforme parâmetro (exato)
         if (param) {
-          if (/^\d+$/.test(param)) {
-            // Se param for um ID numérico, busca direto pelo ID
-            selectedAttr = await getCustomAttributeById(param);
-            if (selectedAttr) attrs = [selectedAttr];
-            console.info('[Kanban] Atributo carregado por ID:', selectedAttr);
-          } else {
-            // param é uma string: busca todos e seleciona pelo attribute_key
-            attrs = await getCustomAttributes();
-            selectedAttr = attrs.find(
-              a => a.attribute_display_type === 'list' && a.attribute_key === param
-            );
-            console.info('[Kanban] Atributo selecionado por chave:', selectedAttr?.attribute_key);
-          }
-        } else {
-          attrs = await getCustomAttributes();
+          selectedAttr = attrs.find(a => a.attribute_display_type === 'list' && a.attribute_key === param);
+          console.log('[DEBUG] Atributo selecionado via parâmetro:', selectedAttr?.attribute_key);
         }
-
-        // Fallbacks para atributo caso não encontrado pelo param
+        // Caso não tenha selecionado ainda, pega primeiro atributo do tipo lista começando com kbw_
         if (!selectedAttr) {
-          selectedAttr = attrs.find(
-            a => a.attribute_display_type === 'list' && a.attribute_key.startsWith('kbw_')
-          );
-          if (!selectedAttr) {
-            selectedAttr = attrs.find(a => a.attribute_display_type === 'list');
-          }
+          selectedAttr = attrs.find(a => a.attribute_display_type === 'list' && a.attribute_key.startsWith('kbw_'));
+          console.log('[DEBUG] Atributo selecionado por fallback (kbw_):', selectedAttr?.attribute_key);
         }
-
+        // Caso não tenha ainda, pega o primeiro atributo do tipo lista
         if (!selectedAttr) {
-          throw new Error('Nenhum atributo customizado do tipo lista encontrado.');
+          selectedAttr = attrs.find(a => a.attribute_display_type === 'list');
+          console.log('[DEBUG] Atributo selecionado por fallback (qualquer lista):', selectedAttr?.attribute_key);
         }
+        if (!selectedAttr) throw new Error('Nenhum atributo tipo lista encontrado.');
 
         const contactsData = await getContacts();
-        console.debug('[Kanban][DEBUG] getCustomAttributes() retorno:', attrs);
-        console.debug('[Kanban][DEBUG] getContacts() retorno:', contactsData);
 
-        setAttribute(selectedAttr);
-        setContacts(contactsData);
+        // Debug antes de setar o estado
+        console.log('[DEBUG] Contatos carregados:', contactsData.length);
+        console.log('[DEBUG] Último atributo no estado:', lastAttributeKeyRef.current);
+        console.log('[DEBUG] Novo atributo para setar:', selectedAttr.attribute_key);
 
-        console.info('[Kanban] Contatos carregados:', contactsData.length);
-        console.info('[Kanban] Colunas (valores do atributo):', selectedAttr.attribute_values?.map(v => v.value));
-        console.info('[Kanban] Estado pronto para renderização.');
-      } catch (err) {
-        if (err.response?.status === 404) {
-          console.warn('[Kanban] Atributo não encontrado no servidor.');
+        // Só atualiza o estado se o atributo mudou (compara attribute_key)
+        if (lastAttributeKeyRef.current !== selectedAttr.attribute_key) {
+          setAttribute({ ...selectedAttr });  // cria novo objeto para garantir atualização
+          lastAttributeKeyRef.current = selectedAttr.attribute_key;
+          setContacts(contactsData);
+          console.log('[DEBUG] Estado attribute atualizado!');
+        } else {
+          console.log('[DEBUG] Atributo igual ao anterior, estado não atualizado.');
         }
+
+      } catch (err) {
         setError(err);
-        console.error('[Kanban] Erro ao carregar dados:', err);
+        console.error('[DEBUG] Erro ao carregar dados:', err);
       } finally {
         setLoading(false);
         console.groupEnd();
@@ -111,24 +89,5 @@ export function useDynamicKanbanData() {
     fetchData();
   }, [location.search]);
 
-  // Atualiza o atributo customizado do contato (ex: mudar coluna)
-  const updateContactStage = async (contactId, value) => {
-    if (!attribute) {
-      throw new Error('Atributo não carregado para atualização.');
-    }
-    await updateContactCustomAttribute(contactId, attribute.attribute_key, value);
-  };
-
-  // Indicador para uso no componente, sinalizando se está pronto
-  const isReady = !loading && !error && attribute;
-
-  return {
-    contacts: filteredContacts,
-    columns,
-    attribute,
-    loading,
-    error,
-    isReady,
-    updateContactStage,
-  };
+  return { contacts, columns, attribute, loading, error };
 }
