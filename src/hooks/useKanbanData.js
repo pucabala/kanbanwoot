@@ -131,6 +131,13 @@ export function useUpdateContactAttribute(onSuccess) {
 
   // Função para atualizar atributo customizado no backend
   const updateContactAttribute = async (contactId, attributeKey, value) => {
+    // Validação: valor deve ser um dos valores válidos da coluna
+    if (!value || !Array.isArray(attribute?.attribute_values) || !attribute.attribute_values.includes(value)) {
+      const errMsg = `[DEBUG] Valor inválido para coluna: "${value}". Valores permitidos: ${JSON.stringify(attribute?.attribute_values)}`;
+      setUpdateError(new Error(errMsg));
+      console.error(errMsg);
+      return;
+    }
     setUpdating(true);
     setUpdateError(null);
     try {
