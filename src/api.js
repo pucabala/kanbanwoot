@@ -60,7 +60,7 @@ export async function getContacts() {
   }
 }
 
-// Retorna todos os atributos customizados
+// Retorna todos os atributos customizados (lista)
 export async function getCustomAttributes() {
   debugLog('api.js: getCustomAttributes chamado');
   try {
@@ -68,6 +68,18 @@ export async function getCustomAttributes() {
     return data.payload || [];
   } catch (error) {
     debugLog('Erro ao buscar atributos customizados:', error);
+    throw error;
+  }
+}
+
+// Retorna um atributo customizado específico pelo ID
+export async function getCustomAttributeById(id) {
+  debugLog('api.js: getCustomAttributeById chamado', id);
+  try {
+    const data = await chatwootFetch(`/custom_attribute_definitions/${id}`);
+    return data.payload || data; // pode vir como objeto direto
+  } catch (error) {
+    debugLog('Erro ao buscar atributo customizado por ID:', error);
     throw error;
   }
 }
