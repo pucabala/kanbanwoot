@@ -10,8 +10,14 @@ import { useLocation } from 'react-router-dom';
  * @returns {string|null}
  */
 function useQueryParam(param) {
-  const { search } = useLocation();
-  return new URLSearchParams(search).get(param);
+  const location = useLocation();
+  const [value, setValue] = useState(() => new URLSearchParams(location.search).get(param));
+
+  useEffect(() => {
+    setValue(new URLSearchParams(location.search).get(param));
+  }, [location.search, param]);
+
+  return value;
 }
 
 export function useDynamicKanbanData() {
@@ -32,7 +38,7 @@ export function useDynamicKanbanData() {
           getCustomAttributes(),
           getContacts()
         ]);
-        console.log('DEBUG: custom attributes recebidos:', attrs);
+        console.log('DEBUG: custom attributes recebidos:', attrs, 'param:', param);
         // Filtra atributos do tipo lista e prefixo kbw_
         let listAttrs = (attrs || []).filter(a => a.attribute_display_type === 6 && a.attribute_key.startsWith('kbw_'));
         let selectedAttr = null;
