@@ -1,4 +1,3 @@
-// Hook principal para carregar e gerenciar dados do Kanban dinâmico
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
@@ -8,7 +7,6 @@ import {
   getCustomAttributeById
 } from '../api';
 
-// Hook customizado para fornecer dados do Kanban de acordo com atributos customizados
 export function useDynamicKanbanData() {
   const location = useLocation();
   const [contacts, setContacts] = useState([]);
@@ -18,6 +16,7 @@ export function useDynamicKanbanData() {
 
   const lastParamRef = useRef(null);
 
+  // Derivado do atributo selecionado
   const columns = useMemo(() => attribute?.attribute_values || [], [attribute]);
 
   const selectKanbanAttribute = (attrs, param) => {
@@ -28,32 +27,25 @@ export function useDynamicKanbanData() {
       if (attrByKey) {
         console.info('[Kanban] Atributo selecionado via URL:', attrByKey.attribute_key);
         return attrByKey;
-      } else {
-        console.warn('[Kanban] Nenhum atributo encontrado com a chave da URL:', param);
       }
+      console.warn('[Kanban] Atributo encontrado com a chave da URL:', param);
     }
 
-    const listAttrs = attrs.filter(
+    const kbwList = attrs.filter(
       a => a.attribute_display_type === 'list' && a.attribute_key.startsWith('kbw_')
     );
-    if (listAttrs.length > 0) {
-      console.info('[Kanban] Atributo padrão selecionado:', listAttrs[0].attribute_key);
-      return listAttrs[0];
+    if (kbwList.length > 0) {
+      console.info('[Kanban] Atributo padrão (kbw_) selecionado:', kbwList[0].attribute_key);
+      return kbwList[0];
     }
 
     const anyListAttr = attrs.find(a => a.attribute_display_type === 'list');
     if (anyListAttr) {
-      console.info('[Kanban] Selecionado primeiro atributo do tipo lista:', anyListAttr.attribute_key);
+      console.info('[Kanban] Primeiro atributo do tipo lista selecionado:', anyListAttr.attribute_key);
       return anyListAttr;
     }
 
-    if (attrs.length > 0) {
-      console.warn('[Kanban] Nenhum atributo do tipo lista (kbw_) encontrado. Atributos válidos para Kanban:');
-      attrs.filter(a => a.attribute_display_type === 'list').forEach(a => {
-        console.info(`- attribute_key: ${a.attribute_key} | display_name: ${a.attribute_display_name}`);
-      });
-    }
-
+    console.warn('[Kanban] Nenhum atributo do tipo lista encontrado.');
     return null;
   };
 
@@ -87,31 +79,29 @@ export function useDynamicKanbanData() {
 
         let contactsData = await getContacts();
 
-        console.debug('[Kanban][DEBUG] getCustomAttributes() retorno:', attrs);
-        console.debug('[Kanban][DEBUG] getContacts() retorno:', contactsData);
+        console.debug('[Kanban][DEBUG] Atributos:', attrs);
+        console.debug('[Kanban][DEBUG] Contatos:', contactsData);
 
         if (!selectedAttr) {
           selectedAttr = selectKanbanAttribute(attrs, param);
         }
 
         if (!selectedAttr) {
-          console.error('[Kanban] Nenhum atributo customizado do tipo lista encontrado.');
           throw new Error('Nenhum atributo customizado do tipo lista encontrado.');
         }
 
-        // FILTRO: Apenas contatos que possuem ao menos um atributo 'kbw_' com valor diferente de null
+        setAttribute(selectedAttr);
+
+        // Filtro: somente contatos com algum atributo "kbw_" diferente de null
         contactsData = contactsData.filter(contact => {
           return Object.entries(contact.custom_attributes || {}).some(
             ([key, value]) => key.startsWith('kbw_') && value !== null
           );
         });
 
-        setAttribute(selectedAttr);
         setContacts(contactsData);
-
-        console.info('[Kanban] Contatos filtrados:', contactsData?.length);
-        console.info('[Kanban] Colunas:', selectedAttr.attribute_values?.map(v => v.value));
-        console.info('[Kanban] Estado pronto para renderização.');
+        console.info('[Kanban] Contatos filtrados:', contactsData.length);
+        console.info('[Kanban] Colunas do atributo selecionado:', selectedAttr.attribute_values?.map(v => v.value));
       } catch (err) {
         if (err.response?.status === 404) {
           console.warn('[Kanban] Atributo não encontrado no servidor.');
