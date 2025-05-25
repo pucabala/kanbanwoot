@@ -29,7 +29,7 @@ export function useDynamicKanbanData() {
         // Filtra atributos do tipo lista e prefixo kbw_
         let listAttrs = (attrs || []).filter(a => a.attribute_display_type === 6 && a.attribute_key.startsWith('kbw_'));
         let selectedAttr = null;
-        // Usa o parâmetro da query string (?kbw=...)
+        // Usa o parâmetro da query string (?kbw=... )
         if (param) {
           selectedAttr = (attrs || []).find(a => a.attribute_display_type === 6 && a.attribute_key === param);
         }
