@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 
-import { getContacts, getCustomAttributes, updateContactCustomAttribute, getCustomAttributeById } from '../api';
+import { getContacts, getCustomAttributes, updateContactCustomAttribute } from '../api';
 
 
 export function useDynamicKanbanData() {
@@ -70,14 +70,16 @@ export function useDynamicKanbanData() {
         console.log('[DEBUG] Último atributo no estado:', lastAttributeKeyRef.current);
         console.log('[DEBUG] Novo atributo para setar:', selectedAttr.attribute_key);
 
+        // Atualiza contatos mesmo se o atributo não mudou
+        setContacts(contactsData); // Sempre atualiza contatos
+
         // Só atualiza o estado se o atributo mudou (compara attribute_key)
         if (lastAttributeKeyRef.current !== selectedAttr.attribute_key) {
           setAttribute({ ...selectedAttr });  // cria novo objeto para garantir atualização
           lastAttributeKeyRef.current = selectedAttr.attribute_key;
-          setContacts(contactsData);
           console.log('[DEBUG] Estado attribute atualizado!');
         } else {
-          console.log('[DEBUG] Atributo igual ao anterior, estado não atualizado.');
+          console.log('[DEBUG] Atributo igual ao anterior, estado attribute não atualizado. Apenas contatos atualizados.');
         }
 
       } catch (err) {
@@ -92,5 +94,6 @@ export function useDynamicKanbanData() {
     fetchData();
   }, [location.search]);
 
+  // Comentário: Retorna todos os dados necessários para o Kanban dinâmico
   return { contacts, columns, attribute, loading, error };
 }
