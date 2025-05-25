@@ -12,7 +12,7 @@ import { getCustomAttributes } from '../api';
 export default function KanbanCard({ contact, index }) {
   // Suporte para thumbnail e telefone
   const thumbnail = contact.thumbnail || contact.avatar_url || contact.profile_picture_url;
-  const phone = contact.phone || contact.telefone || contact.mobile;
+  const phone = contact.phone_number || contact.telefone || contact.mobile;
 
   // Novo: buscar e mapear display_name dos atributos kbw_
   const [attrDisplayNames, setAttrDisplayNames] = useState({});
